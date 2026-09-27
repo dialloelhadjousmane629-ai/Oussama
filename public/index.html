@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Carnet de dettes</title>
+<meta name="theme-color" content="#F3F5F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1411" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="Dettes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
@@ -120,6 +127,7 @@ h1 {
   text-wrap: balance;
 }
 .sub { margin: 6px 0 0; color: var(--muted); max-width: 54ch; }
+.top-side { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
 .today { margin: 0; color: var(--muted); font-size: 13px; }
 
 .bilan {
@@ -408,7 +416,10 @@ input:focus-visible { outline: 2px solid var(--focus); outline-offset: 0; border
         <h1>Carnet de dettes</h1>
         <p class="sub">Transfert d'argent, boutique et dettes personnelles, en francs guinéens (GNF) et en dollars (USD).</p>
       </div>
-      <p class="today" id="today"></p>
+      <div class="top-side">
+        <button type="button" class="btn" id="btn-installer" hidden>Installer sur cet appareil</button>
+        <p class="today" id="today"></p>
+      </div>
     </div>
     <section class="bilan" id="bilan" aria-label="Bilan général"></section>
   </header>
@@ -1075,6 +1086,31 @@ input:focus-visible { outline: 2px solid var(--focus); outline-offset: 0; border
     var d = art && dettes.find(function (x) { return x.id === art.dataset.id; });
     if (d) enregistrerPaiement(d);
   });
+
+  /* ---------- Installation (raccourci sur le bureau ou l'écran d'accueil) ---------- */
+  var invite = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    invite = e;
+    $('btn-installer').hidden = false;
+  });
+  $('btn-installer').addEventListener('click', function () {
+    if (!invite) return;
+    invite.prompt();
+    invite.userChoice.then(function () {
+      invite = null;
+      $('btn-installer').hidden = true;
+    });
+  });
+  window.addEventListener('appinstalled', function () {
+    $('btn-installer').hidden = true;
+    toast('Carnet installé : le raccourci est prêt.');
+  });
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () { /* le site marche aussi sans */ });
+    });
+  }
 
   /* ---------- Démarrage ---------- */
   var jour = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());

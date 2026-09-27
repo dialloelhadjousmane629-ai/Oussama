@@ -25,3 +25,11 @@ Ouvrez `public/index.html` dans un navigateur (téléphone ou ordinateur). Aucun
 Le site est aussi publié sur Cloudflare Workers : seul le dossier `public/` est mis en ligne (configuration dans `wrangler.jsonc`).
 
 Les données sont enregistrées dans le navigateur de l'appareil (`localStorage`). Si vous effacez les données du navigateur, les dettes sont perdues.
+
+## Raccourci sur le bureau ou l'écran d'accueil
+
+Le site s'installe comme une application, avec sa propre icône, et s'ouvre même sans connexion.
+
+- **Ordinateur (Chrome ou Edge)** : ouvrez https://oussama.dialloelhadjousmane629.workers.dev puis cliquez sur « Installer sur cet appareil » en haut de la page (ou sur l'icône d'installation dans la barre d'adresse). Le raccourci apparaît sur le bureau et dans le menu Démarrer.
+- **Android (Chrome)** : menu ⋮ puis « Ajouter à l'écran d'accueil » ou « Installer l'application ».
+- **iPhone (Safari)** : bouton Partager puis « Sur l'écran d'accueil ».
