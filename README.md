@@ -20,6 +20,8 @@ Chaque dette est en **francs guinéens (GNF)** ou en **dollars (USD)**. Les tota
 
 ## Utilisation
 
-Ouvrez `index.html` dans un navigateur (téléphone ou ordinateur). Aucune installation n'est nécessaire.
+Ouvrez `public/index.html` dans un navigateur (téléphone ou ordinateur). Aucune installation n'est nécessaire.
+
+Le site est aussi publié sur Cloudflare Workers : seul le dossier `public/` est mis en ligne (configuration dans `wrangler.jsonc`).
 
 Les données sont enregistrées dans le navigateur de l'appareil (`localStorage`). Si vous effacez les données du navigateur, les dettes sont perdues.
