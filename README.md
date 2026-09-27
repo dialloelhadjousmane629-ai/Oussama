@@ -1,2 +1,23 @@
-# Oussama
-Oussama diallo 
+# Carnet de dettes
+
+Une fiche pour enregistrer les dettes, séparées en trois catégories, chacune avec son propre bouton d'affichage :
+
+- **Transfert d'argent** : l'argent qu'on me doit sur les transferts
+- **Boutique** : les marchandises prises à crédit par les clients
+- **Mes dettes personnelles** : l'argent que je dois moi-même
+
+Chaque dette est en **francs guinéens (GNF)** ou en **dollars (USD)**. Les totaux sont calculés séparément pour chaque devise, sans conversion.
+
+## Fonctions
+
+- Ajouter, modifier ou supprimer une dette (nom, téléphone, montant, devise, date, échéance, note)
+- Enregistrer des paiements partiels. Le reste à payer et le statut se mettent à jour tout seuls : Non payé, Partiel, En retard (échéance dépassée), Soldé
+- Bilan général : « On me doit » (transfert + boutique) et « Je dois » (dettes personnelles)
+- Recherche par nom, numéro ou note ; filtres par statut et par devise
+- Les montants s'écrivent librement : `2 500 000`, `2.500.000` ou `150,50`
+
+## Utilisation
+
+Ouvrez `index.html` dans un navigateur (téléphone ou ordinateur). Aucune installation n'est nécessaire.
+
+Les données sont enregistrées dans le navigateur de l'appareil (`localStorage`). Si vous effacez les données du navigateur, les dettes sont perdues.
