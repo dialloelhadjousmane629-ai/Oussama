@@ -1,0 +1,1091 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carnet de dettes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root {
+  --bg: #F3F5F3;
+  --surface: #FFFFFF;
+  --surface-2: #E9EDEA;
+  --ink: #14201A;
+  --muted: #5A6860;
+  --line: #D6DDD8;
+  --accent: #14201A;
+  --accent-ink: #FFFFFF;
+  --focus: #0A7F5A;
+  --ok: #1B7A4B;
+  --ok-bg: #DFF1E6;
+  --warn: #8A5D00;
+  --warn-bg: #FBEFCF;
+  --bad: #B42318;
+  --bad-bg: #FBE4E1;
+  --flag-r: #CE1126;
+  --flag-y: #FCD116;
+  --flag-g: #009460;
+  --radius: 10px;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-num: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0E1411;
+    --surface: #161E1A;
+    --surface-2: #212C26;
+    --ink: #E5ECE7;
+    --muted: #9AA89F;
+    --line: #2B3731;
+    --accent: #E5ECE7;
+    --accent-ink: #0E1411;
+    --focus: #4CC79A;
+    --ok: #5CC58D;
+    --ok-bg: #173323;
+    --warn: #E6B84A;
+    --warn-bg: #352A10;
+    --bad: #F2786D;
+    --bad-bg: #3B1B18;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0E1411;
+  --surface: #161E1A;
+  --surface-2: #212C26;
+  --ink: #E5ECE7;
+  --muted: #9AA89F;
+  --line: #2B3731;
+  --accent: #E5ECE7;
+  --accent-ink: #0E1411;
+  --focus: #4CC79A;
+  --ok: #5CC58D;
+  --ok-bg: #173323;
+  --warn: #E6B84A;
+  --warn-bg: #352A10;
+  --bad: #F2786D;
+  --bad-bg: #3B1B18;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+.num { font-family: var(--f-num); font-weight: 500; font-variant-numeric: tabular-nums; }
+.eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding-inline: 16px;
+  padding-block: 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* En-tête */
+.top { display: flex; flex-direction: column; gap: 14px; }
+.flag { display: flex; width: 66px; height: 6px; border-radius: 3px; overflow: hidden; }
+.flag span { flex: 1; }
+.flag span:nth-child(1) { background: var(--flag-r); }
+.flag span:nth-child(2) { background: var(--flag-y); }
+.flag span:nth-child(3) { background: var(--flag-g); }
+.top-row { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; }
+h1 {
+  margin: 0;
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: clamp(30px, 7vw, 42px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.sub { margin: 6px 0 0; color: var(--muted); max-width: 54ch; }
+.today { margin: 0; color: var(--muted); font-size: 13px; }
+
+.bilan {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.bilan-bloc { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; min-width: 0; }
+.bilan-bloc + .bilan-bloc { border-left: 1px solid var(--line); }
+.bilan-bloc .num { font-size: 17px; overflow-wrap: anywhere; }
+.bilan-bloc .meta { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+@media (max-width: 520px) {
+  .bilan { grid-template-columns: 1fr; }
+  .bilan-bloc + .bilan-bloc { border-left: 0; border-top: 1px solid var(--line); }
+}
+
+/* Boutons d'affichage par catégorie */
+.cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 680px) { .cats { grid-template-columns: 1fr; } }
+.cat {
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  align-items: start;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.cat:hover { border-color: var(--muted); }
+.cat-nom { font-family: var(--f-display); font-weight: 600; font-size: 18px; line-height: 1.2; }
+.cat-voir {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.cat-sens { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); }
+.cat-tots { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0 14px; margin-top: 6px; font-size: 14.5px; }
+.cat-n { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); }
+.cat[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.cat[aria-pressed="true"] .cat-sens,
+.cat[aria-pressed="true"] .cat-n { color: inherit; opacity: 0.72; }
+.cat[aria-pressed="true"] .cat-voir { border-color: currentColor; }
+
+/* Panneau de la catégorie */
+.panel { display: flex; flex-direction: column; gap: 16px; }
+.panel-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 16px; }
+h2 {
+  margin: 0;
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.hint { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.totaux { display: flex; flex-wrap: wrap; gap: 10px 28px; }
+.totaux div { display: flex; flex-direction: column; }
+.totaux .num { font-size: 15.5px; }
+
+/* Boutons */
+.btn {
+  appearance: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 14px;
+  min-height: 40px;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { opacity: 0.9; }
+.btn.small { font-size: 13px; padding: 6px 11px; min-height: 34px; }
+.btn.danger { color: var(--bad); }
+.btn.danger-solid { background: var(--bad); border-color: var(--bad); color: #FFFFFF; }
+
+/* Formulaires */
+.form {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.form h3 { margin: 0; font-family: var(--f-display); font-weight: 600; font-size: 19px; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.span2 { grid-column: 1 / -1; }
+@media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.field > label, .field > legend { font-size: 13px; font-weight: 600; padding: 0; }
+.opt { font-weight: 400; color: var(--muted); }
+input[type="text"], input[type="tel"], input[type="date"], input[type="search"] {
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  width: 100%;
+  min-height: 44px;
+}
+input::placeholder { color: var(--muted); opacity: 0.8; }
+input:focus-visible { outline: 2px solid var(--focus); outline-offset: 0; border-color: var(--focus); }
+.affix { display: flex; }
+.affix input { border-top-right-radius: 0; border-bottom-right-radius: 0; min-width: 0; font-family: var(--f-num); }
+.affix span {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-left: 0;
+  border-radius: 0 8px 8px 0;
+  background: var(--surface-2);
+  font-family: var(--f-num);
+  font-size: 13px;
+  color: var(--muted);
+}
+.apercu { margin: 0; min-height: 1.4em; font-size: 12.5px; color: var(--muted); }
+.note-champ { margin: 0; font-size: 12.5px; color: var(--muted); }
+.err { margin: 0; color: var(--bad); font-size: 13.5px; }
+.err:empty { display: none; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Contrôles segmentés */
+.seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+.seg button, .seg label span {
+  display: block;
+  appearance: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 11px;
+  cursor: pointer;
+}
+.seg button[aria-pressed="true"], .seg input:checked + span {
+  background: var(--surface-2);
+  color: var(--ink);
+  font-weight: 600;
+}
+.seg label { position: relative; }
+.seg input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.seg input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 1px; }
+.seg input:disabled + span { cursor: not-allowed; opacity: 0.6; }
+.seg.devise { align-self: flex-start; }
+.seg.devise label span { font-size: 14px; padding: 8px 14px; }
+
+.outils { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.outils input[type="search"] { flex: 1 1 220px; width: auto; }
+
+/* Fiches de dette */
+.liste { display: flex; flex-direction: column; gap: 10px; }
+.chargement, .aucun { margin: 0; padding: 18px 0; color: var(--muted); }
+.dette {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dette.exemple { background: transparent; border-style: dashed; }
+.d-haut { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.d-qui { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.d-qui h3 { margin: 0; font-size: 16.5px; font-weight: 600; overflow-wrap: anywhere; }
+.badge-ex {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px dashed var(--muted);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+.d-meta { margin: -6px 0 0; font-size: 13px; color: var(--muted); }
+.pill { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.p-solde { background: var(--ok-bg); color: var(--ok); }
+.p-partiel { background: var(--warn-bg); color: var(--warn); }
+.p-nonpaye { background: var(--surface-2); color: var(--muted); }
+.p-retard { background: var(--bad-bg); color: var(--bad); }
+.d-chiffres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; margin: 0; }
+.d-chiffres div { min-width: 0; }
+.d-chiffres dt { font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.d-chiffres dd { margin: 0; font-size: 14.5px; overflow-wrap: anywhere; }
+.d-chiffres .fort { font-size: 15.5px; }
+.s-solde .d-chiffres .fort { color: var(--ok); }
+.s-retard .d-chiffres .fort { color: var(--bad); }
+@media (max-width: 460px) {
+  .d-chiffres { grid-template-columns: 1fr; gap: 4px; }
+  .d-chiffres div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+}
+.barre { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.barre span { display: block; height: 100%; background: var(--ok); border-radius: 3px; }
+.d-note { margin: 0; font-size: 14px; }
+.d-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.confirmer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 2px; }
+.confirmer p { margin: 0; font-size: 14px; flex: 1 1 200px; }
+
+.paiement {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 12px;
+}
+.paiement .actions, .paiement .err { grid-column: 1 / -1; }
+@media (max-width: 460px) { .paiement { grid-template-columns: 1fr; } }
+
+.histo { list-style: none; margin: 0; padding: 10px 0 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.histo li { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.histo .h-date { color: var(--muted); flex: 1 1 auto; }
+.histo .h-retirer {
+  appearance: none;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  padding: 4px 6px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.histo .h-retirer:hover { color: var(--bad); }
+
+.pied { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 14px; }
+.pied p { margin: 0; max-width: 70ch; }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  background: var(--ink);
+  color: var(--bg);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  z-index: 20;
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="flag" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="top-row">
+      <div>
+        <h1>Carnet de dettes</h1>
+        <p class="sub">Transfert d'argent, boutique et dettes personnelles, en francs guinéens (GNF) et en dollars (USD).</p>
+      </div>
+      <p class="today" id="today"></p>
+    </div>
+    <section class="bilan" id="bilan" aria-label="Bilan général"></section>
+  </header>
+
+  <nav class="cats" id="cats" aria-label="Afficher une catégorie"></nav>
+
+  <main class="panel" id="panel">
+    <div class="panel-head">
+      <div>
+        <h2 id="cat-titre">Transfert d'argent</h2>
+        <p class="hint" id="cat-hint"></p>
+      </div>
+      <button type="button" class="btn primary" id="btn-nouvelle">+ Nouvelle dette</button>
+    </div>
+    <div class="totaux" id="cat-totaux"></div>
+
+    <form id="form" class="form" hidden novalidate>
+      <h3 id="form-titre">Nouvelle dette</h3>
+      <div class="grid">
+        <div class="field span2">
+          <label for="f-nom" id="f-nom-label">Nom du client</label>
+          <input id="f-nom" type="text" autocomplete="off" maxlength="80">
+        </div>
+        <fieldset class="field">
+          <legend>Devise</legend>
+          <div class="seg devise">
+            <label><input type="radio" name="devise" id="f-dev-gnf" value="GNF" checked><span>GNF · franc guinéen</span></label>
+            <label><input type="radio" name="devise" id="f-dev-usd" value="USD"><span>USD · dollar</span></label>
+          </div>
+          <p class="note-champ" id="f-devise-note" hidden>La devise ne change plus après un premier paiement.</p>
+        </fieldset>
+        <div class="field">
+          <label for="f-montant">Montant</label>
+          <div class="affix">
+            <input id="f-montant" type="text" inputmode="decimal" autocomplete="off" placeholder="0">
+            <span id="f-suffixe">GNF</span>
+          </div>
+          <p class="apercu" id="f-apercu" aria-live="polite"></p>
+        </div>
+        <div class="field">
+          <label for="f-tel">Téléphone <span class="opt">facultatif</span></label>
+          <input id="f-tel" type="tel" inputmode="tel" autocomplete="off" placeholder="6XX XX XX XX" maxlength="30">
+        </div>
+        <div class="field">
+          <label for="f-date">Date de la dette</label>
+          <input id="f-date" type="date">
+        </div>
+        <div class="field">
+          <label for="f-echeance">Échéance <span class="opt">facultatif</span></label>
+          <input id="f-echeance" type="date">
+        </div>
+        <div class="field">
+          <label for="f-note">Note <span class="opt">facultatif</span></label>
+          <input id="f-note" type="text" autocomplete="off" maxlength="200">
+        </div>
+      </div>
+      <p class="err" id="form-err" role="alert"></p>
+      <div class="actions">
+        <button type="submit" class="btn primary" id="f-submit">Enregistrer la dette</button>
+        <button type="button" class="btn" id="f-annuler">Annuler</button>
+      </div>
+    </form>
+
+    <div class="outils">
+      <input id="recherche" type="search" placeholder="Rechercher un nom, un numéro, une note…" aria-label="Rechercher">
+      <div class="seg" role="group" aria-label="Filtrer par statut" id="filtre-statut">
+        <button type="button" data-statut="tous">Toutes</button>
+        <button type="button" data-statut="encours">En cours</button>
+        <button type="button" data-statut="soldees">Soldées</button>
+      </div>
+      <div class="seg" role="group" aria-label="Filtrer par devise" id="filtre-devise">
+        <button type="button" data-devise="toutes">GNF + USD</button>
+        <button type="button" data-devise="GNF">GNF</button>
+        <button type="button" data-devise="USD">USD</button>
+      </div>
+    </div>
+
+    <div id="liste" class="liste" aria-live="polite"></div>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var CATS = {
+    transfert: {
+      nom: "Transfert d'argent",
+      sens: 'On me doit',
+      aide: "Argent envoyé ou remis à crédit, en attente de remboursement.",
+      qui: 'Nom du client',
+      note: 'Ex. : envoi Orange Money vers Kankan',
+      reste: 'Reste à encaisser',
+      paye: 'Déjà reçu',
+      btnPay: '+ Paiement reçu',
+      ex: { nom: 'Mamadou Bah', tel: '622 00 00 00', montant: 2500000, devise: 'GNF', paye: 1000000, note: 'Envoi Orange Money vers Labé' }
+    },
+    boutique: {
+      nom: 'Boutique',
+      sens: 'On me doit',
+      aide: 'Marchandises prises à crédit par les clients de la boutique.',
+      qui: 'Nom du client',
+      note: "Ex. : 2 sacs de riz, 1 bidon d'huile",
+      reste: 'Reste à encaisser',
+      paye: 'Déjà reçu',
+      btnPay: '+ Paiement reçu',
+      ex: { nom: 'Fatoumata Camara', tel: '', montant: 350000, devise: 'GNF', paye: 0, note: "Sac de riz 25 kg et bidon d'huile" }
+    },
+    personnel: {
+      nom: 'Mes dettes personnelles',
+      sens: 'Je dois',
+      aide: "L'argent que je dois moi-même rembourser.",
+      qui: 'À qui je dois',
+      note: 'Ex. : prêt pour le loyer',
+      reste: 'Reste à rembourser',
+      paye: 'Déjà remboursé',
+      btnPay: '+ Remboursement',
+      ex: { nom: 'Alpha Diallo', tel: '', montant: 200, devise: 'USD', paye: 50, note: 'Prêt pour le loyer' }
+    }
+  };
+  var ORDRE = ['transfert', 'boutique', 'personnel'];
+  var STATUTS = { nonpaye: 'Non payé', partiel: 'Partiel', retard: 'En retard', solde: 'Soldé' };
+  var RANG = { retard: 0, partiel: 1, nonpaye: 1, solde: 2 };
+  var LS_DATA = 'carnet-dettes:v1';
+  var LS_ONGLET = 'carnet-dettes:onglet';
+
+  var dettes = [];
+  var charge = false;
+  var ui = { cat: 'transfert', q: '', statut: 'tous', devise: 'toutes', editId: null, payOpen: null, histOpen: {}, confirmDel: null };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var mouvement = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+
+  /* ---------- Format ---------- */
+  var fmtGNF = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
+  var fmtUSD = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var fmtDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  function esp(s) { return s.replace(/[ \s]/g, ' '); }
+  function nombre(v, dev) { return esp(dev === 'USD' ? fmtUSD.format(v) : fmtGNF.format(v)); }
+  function money(v, dev) { return nombre(v, dev) + (dev === 'USD' ? ' $' : ' GNF'); }
+  function arrondi(v, dev) { return dev === 'USD' ? Math.round(v * 100) / 100 : Math.round(v); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function aujourdhui() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function dateFr(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+    return m ? fmtDate.format(new Date(+m[1], +m[2] - 1, +m[3])) : '';
+  }
+  function pluriel(n, mot) { return n + ' ' + mot + (n > 1 ? 's' : ''); }
+  function sansAccents(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+
+  /* Accepte « 2 500 000 », « 2.500.000 », « 150,50 » ou « 150.50 ». */
+  function lireMontant(s) {
+    var t = String(s || '').replace(/[\s  ]/g, '');
+    if (!t || !/^[\d.,]+$/.test(t)) return NaN;
+    var m = /^(.*?)[.,](\d{1,2})$/.exec(t);
+    t = m ? m[1].replace(/[.,]/g, '') + '.' + m[2] : t.replace(/[.,]/g, '');
+    if (!/^\d*(\.\d+)?$/.test(t) || t === '.') return NaN;
+    return parseFloat(t);
+  }
+  function pourSaisie(v, dev) { return nombre(v, dev).replace(/ /g, ' '); }
+
+  function nouvelId() { return 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+  /* ---------- Calculs ---------- */
+  function totalPaye(d) {
+    return arrondi(d.paiements.reduce(function (s, p) { return s + p.montant; }, 0), d.devise);
+  }
+  function resteDu(d) { return Math.max(0, arrondi(d.montant - totalPaye(d), d.devise)); }
+  function statut(d) {
+    if (resteDu(d) <= 0) return 'solde';
+    if (d.echeance && d.echeance < aujourdhui()) return 'retard';
+    return totalPaye(d) > 0 ? 'partiel' : 'nonpaye';
+  }
+  function totaux(liste) {
+    var t = { GNF: 0, USD: 0, payeGNF: 0, payeUSD: 0, n: 0 };
+    liste.forEach(function (d) {
+      var r = resteDu(d);
+      t['paye' + d.devise] += totalPaye(d);
+      if (r > 0) { t[d.devise] += r; t.n++; }
+    });
+    ['GNF', 'USD'].forEach(function (k) { t[k] = arrondi(t[k], k); t['paye' + k] = arrondi(t['paye' + k], k); });
+    return t;
+  }
+
+  function normaliser(r) {
+    var dev = r.devise === 'USD' ? 'USD' : 'GNF';
+    return {
+      id: String(r.id),
+      categorie: CATS[r.categorie] ? r.categorie : 'personnel',
+      nom: String(r.nom || ''),
+      tel: String(r.tel || ''),
+      montant: arrondi(Number(r.montant) || 0, dev),
+      devise: dev,
+      date: String(r.date || ''),
+      echeance: String(r.echeance || ''),
+      note: String(r.note || ''),
+      paiements: (Array.isArray(r.paiements) ? r.paiements : []).map(function (p, i) {
+        return { id: String(p.id || 'p' + i), montant: arrondi(Number(p.montant) || 0, dev), date: String(p.date || '') };
+      }),
+      creeLe: Number(r.creeLe) || 0
+    };
+  }
+  function copie(d) { return normaliser(JSON.parse(JSON.stringify(d))); }
+
+  /* ---------- Stockage ----------
+     Dans Claude : base de données de l'artefact (collection « dettes »).
+     Ailleurs : localStorage de ce navigateur. */
+  function lireLocal() {
+    try {
+      var brut = JSON.parse(localStorage.getItem(LS_DATA) || '[]');
+      return Array.isArray(brut) ? brut.map(normaliser) : [];
+    } catch (e) { return []; }
+  }
+  function ecrireLocal() {
+    try { localStorage.setItem(LS_DATA, JSON.stringify(dettes)); return true; }
+    catch (e) { return false; }
+  }
+  function attendre(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
+  function essai(fn) {
+    return fn().catch(function (e) {
+      if (e && e.code === 'unavailable') return attendre(400 + Math.random() * 800).then(fn);
+      throw e;
+    });
+  }
+
+  var store = {
+    mode: 'local',
+    col: null,
+    demarrer: function () {
+      var self = this;
+      var c = window.claude;
+      if (c && typeof c.use === 'function') {
+        return Promise.resolve().then(function () { return c.use('db'); }).catch(function () { return null; }).then(function (db) {
+          if (!db) return self.local();
+          self.mode = 'db';
+          self.col = db.collection('dettes');
+          self.col.onSnapshot(function (snap) {
+            self.depuis(snap);
+          }, function (err) {
+            toast(messageErreur(err));
+          });
+          renderPied();
+        });
+      }
+      return Promise.resolve(self.local());
+    },
+    local: function () {
+      this.mode = 'local';
+      dettes = lireLocal();
+      charge = true;
+      renderPied();
+      render();
+    },
+    depuis: function (snap) {
+      dettes = snap.docs.filter(function (d) { return d.exists; }).map(function (d) {
+        var corps = Object.assign({}, d.data());
+        corps.id = d.id;
+        return normaliser(corps);
+      });
+      charge = true;
+      render();
+    },
+    resynchroniser: function () {
+      var self = this;
+      if (self.mode === 'db') self.col.get().then(function (snap) { self.depuis(snap); }).catch(function () {});
+      else { dettes = lireLocal(); render(); }
+    },
+    enregistrer: function (d) {
+      var i = dettes.findIndex(function (x) { return x.id === d.id; });
+      if (i >= 0) dettes[i] = d; else dettes.push(d);
+      render();
+      if (this.mode === 'db') {
+        var corps = Object.assign({}, d);
+        delete corps.id;
+        var ref = this.col.doc(d.id);
+        return essai(function () { return ref.set(corps); });
+      }
+      return ecrireLocal() ? Promise.resolve() : Promise.reject({ code: 'local' });
+    },
+    supprimer: function (id) {
+      dettes = dettes.filter(function (x) { return x.id !== id; });
+      render();
+      if (this.mode === 'db') {
+        var ref = this.col.doc(id);
+        return essai(function () { return ref.delete(); });
+      }
+      return ecrireLocal() ? Promise.resolve() : Promise.reject({ code: 'local' });
+    }
+  };
+
+  function messageErreur(e) {
+    switch (e && e.code) {
+      case 'local': return "Impossible d'enregistrer dans ce navigateur : le stockage est bloqué ou plein.";
+      case 'quota_exceeded': return 'Le carnet est plein. Supprimez des dettes soldées pour en ajouter.';
+      case 'invalid_argument': return 'Enregistrement refusé : seul le propriétaire du carnet peut le modifier.';
+      case 'resource_exhausted': return 'Trop de modifications à la fois. Attendez quelques secondes puis réessayez.';
+      case 'revoked':
+      case 'not_granted':
+      case 'capability_disabled':
+      case 'capability_removed': return "L'accès au carnet a été coupé. Rechargez la page.";
+      default: return 'Enregistrement impossible pour le moment. Réessayez dans un instant.';
+    }
+  }
+  function echec(e) { toast(messageErreur(e)); store.resynchroniser(); }
+  function sauver(d, msg) {
+    return store.enregistrer(d).then(function () { if (msg) toast(msg); }).catch(echec);
+  }
+
+  /* ---------- Affichage ---------- */
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.hidden = true; }, 3200);
+  }
+
+  function render() {
+    renderBilan();
+    renderCats();
+    renderPanel();
+    renderListe();
+  }
+
+  function renderBilan() {
+    var on = totaux(dettes.filter(function (d) { return d.categorie !== 'personnel'; }));
+    var moi = totaux(dettes.filter(function (d) { return d.categorie === 'personnel'; }));
+    function bloc(titre, t, meta) {
+      return '<div class="bilan-bloc"><span class="eyebrow">' + titre + '</span>' +
+        '<span class="num">' + money(t.GNF, 'GNF') + '</span>' +
+        '<span class="num">' + money(t.USD, 'USD') + '</span>' +
+        '<span class="meta">' + meta + ' · ' + pluriel(t.n, 'dette') + ' en cours</span></div>';
+    }
+    $('bilan').innerHTML = bloc('On me doit', on, 'Transfert + boutique') + bloc('Je dois', moi, 'Dettes personnelles');
+  }
+
+  function renderCats() {
+    $('cats').innerHTML = ORDRE.map(function (k) {
+      var c = CATS[k];
+      var liste = dettes.filter(function (d) { return d.categorie === k; });
+      var t = totaux(liste);
+      var actif = ui.cat === k;
+      return '<button type="button" class="cat" data-cat="' + k + '" aria-pressed="' + actif + '" aria-controls="panel">' +
+        '<span class="cat-nom">' + esc(c.nom) + '</span>' +
+        '<span class="cat-voir">' + (actif ? 'Affiché' : 'Afficher') + '</span>' +
+        '<span class="cat-sens">' + c.sens + '</span>' +
+        '<span class="cat-tots"><span class="num">' + money(t.GNF, 'GNF') + '</span><span class="num">' + money(t.USD, 'USD') + '</span></span>' +
+        '<span class="cat-n">' + pluriel(t.n, 'dette') + ' en cours · ' + liste.length + ' au total</span>' +
+        '</button>';
+    }).join('');
+  }
+
+  function renderPanel() {
+    var c = CATS[ui.cat];
+    $('cat-titre').textContent = c.nom;
+    $('cat-hint').textContent = c.sens + ' · ' + c.aide;
+    $('f-nom-label').textContent = c.qui;
+    $('f-note').placeholder = c.note;
+    var t = totaux(dettes.filter(function (d) { return d.categorie === ui.cat; }));
+    $('cat-totaux').innerHTML =
+      '<div><span class="eyebrow">' + c.reste + ' en GNF</span><span class="num">' + money(t.GNF, 'GNF') + '</span></div>' +
+      '<div><span class="eyebrow">' + c.reste + ' en USD</span><span class="num">' + money(t.USD, 'USD') + '</span></div>' +
+      '<div><span class="eyebrow">' + c.paye + '</span><span class="num">' + money(t.payeGNF, 'GNF') + ' · ' + money(t.payeUSD, 'USD') + '</span></div>';
+    document.querySelectorAll('#filtre-statut button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.statut === ui.statut)); });
+    document.querySelectorAll('#filtre-devise button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.devise === ui.devise)); });
+  }
+
+  function exemple(k) {
+    var e = CATS[k].ex;
+    return normaliser({
+      id: 'exemple', categorie: k, nom: e.nom, tel: e.tel, montant: e.montant, devise: e.devise,
+      date: aujourdhui(), echeance: '', note: e.note,
+      paiements: e.paye ? [{ id: 'p0', montant: e.paye, date: aujourdhui() }] : []
+    });
+  }
+
+  function carte(d, estExemple) {
+    var c = CATS[d.categorie];
+    var p = totalPaye(d), r = resteDu(d), s = statut(d);
+    var pct = d.montant > 0 ? Math.min(100, Math.round(p / d.montant * 100)) : 0;
+    var meta = [
+      d.tel ? esc(d.tel) : '',
+      d.date ? 'le ' + dateFr(d.date) : '',
+      d.echeance ? 'échéance ' + dateFr(d.echeance) : ''
+    ].filter(Boolean).join(' · ');
+
+    var h = '<article class="dette s-' + s + (estExemple ? ' exemple' : '') + '" data-id="' + esc(d.id) + '">' +
+      '<div class="d-haut"><div class="d-qui"><h3>' + esc(d.nom) + '</h3>' +
+      (estExemple ? '<span class="badge-ex">Exemple</span>' : '') + '</div>' +
+      '<span class="pill p-' + s + '">' + STATUTS[s] + '</span></div>' +
+      (meta ? '<p class="d-meta">' + meta + '</p>' : '') +
+      '<dl class="d-chiffres">' +
+      '<div><dt>Montant</dt><dd class="num">' + money(d.montant, d.devise) + '</dd></div>' +
+      '<div><dt>' + c.paye + '</dt><dd class="num">' + money(p, d.devise) + '</dd></div>' +
+      '<div><dt>Reste</dt><dd class="num fort">' + money(r, d.devise) + '</dd></div>' +
+      '</dl>' +
+      '<div class="barre" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="' + pct + ' % payé"><span style="width:' + pct + '%"></span></div>' +
+      (d.note ? '<p class="d-note">' + esc(d.note) + '</p>' : '');
+
+    if (estExemple) return h + '</article>';
+
+    if (ui.confirmDel === d.id) {
+      h += '<div class="confirmer"><p>Supprimer définitivement la dette de <strong>' + esc(d.nom) + '</strong> ?</p>' +
+        '<button type="button" class="btn small danger-solid" data-action="supprimer-oui">Oui, supprimer</button>' +
+        '<button type="button" class="btn small" data-action="supprimer-non">Annuler</button></div>';
+    } else {
+      h += '<div class="d-actions">' +
+        (r > 0 ? '<button type="button" class="btn small primary" data-action="payer">' + c.btnPay + '</button>' : '') +
+        (d.paiements.length ? '<button type="button" class="btn small" data-action="historique" aria-expanded="' + !!ui.histOpen[d.id] + '">Paiements (' + d.paiements.length + ')</button>' : '') +
+        '<button type="button" class="btn small" data-action="modifier">Modifier</button>' +
+        '<button type="button" class="btn small danger" data-action="supprimer">Supprimer</button>' +
+        '</div>';
+    }
+
+    if (ui.payOpen === d.id && r > 0) {
+      h += '<div class="paiement">' +
+        '<div class="field"><label for="p-montant-' + d.id + '">Montant payé</label>' +
+        '<div class="affix"><input id="p-montant-' + d.id + '" type="text" inputmode="decimal" autocomplete="off" placeholder="Reste : ' + esc(pourSaisie(r, d.devise)) + '">' +
+        '<span>' + d.devise + '</span></div></div>' +
+        '<div class="field"><label for="p-date-' + d.id + '">Date</label><input id="p-date-' + d.id + '" type="date" value="' + aujourdhui() + '"></div>' +
+        '<p class="err" id="p-err-' + d.id + '" role="alert"></p>' +
+        '<div class="actions">' +
+        '<button type="button" class="btn small primary" data-action="payer-ok">Enregistrer le paiement</button>' +
+        '<button type="button" class="btn small" data-action="payer-tout">Tout le reste (' + money(r, d.devise) + ')</button>' +
+        '<button type="button" class="btn small" data-action="payer-annuler">Annuler</button>' +
+        '</div></div>';
+    }
+
+    if (ui.histOpen[d.id] && d.paiements.length) {
+      h += '<ul class="histo">' + d.paiements.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; }).map(function (pm) {
+        return '<li><span class="h-date">' + (dateFr(pm.date) || 'Sans date') + '</span>' +
+          '<span class="num">' + money(pm.montant, d.devise) + '</span>' +
+          '<button type="button" class="h-retirer" data-action="retirer-paiement" data-pid="' + esc(pm.id) + '">Retirer</button></li>';
+      }).join('') + '</ul>';
+    }
+    return h + '</article>';
+  }
+
+  function renderListe() {
+    var boite = $('liste');
+    if (!charge) { boite.innerHTML = '<p class="chargement">Chargement du carnet…</p>'; return; }
+
+    // Garde ce qui est en cours de saisie (formulaire de paiement) pendant le rafraîchissement.
+    var saisies = {};
+    boite.querySelectorAll('input[id]').forEach(function (i) { saisies[i.id] = i.value; });
+    var focusId = document.activeElement && boite.contains(document.activeElement) ? document.activeElement.id : null;
+
+    var tout = dettes.filter(function (d) { return d.categorie === ui.cat; });
+    var c = CATS[ui.cat];
+    if (!tout.length) {
+      boite.innerHTML = '<p class="aucun">Aucune dette enregistrée dans « ' + esc(c.nom) + ' ». Voici à quoi ressemblera une fiche :</p>' +
+        carte(exemple(ui.cat), true) +
+        '<div class="actions"><button type="button" class="btn primary" data-action="nouvelle">+ Ajouter la première dette</button></div>';
+      return;
+    }
+
+    var q = sansAccents(ui.q.trim());
+    var vues = tout.filter(function (d) {
+      var s = statut(d);
+      if (ui.statut === 'encours' && s === 'solde') return false;
+      if (ui.statut === 'soldees' && s !== 'solde') return false;
+      if (ui.devise !== 'toutes' && d.devise !== ui.devise) return false;
+      if (q && sansAccents(d.nom + ' ' + d.tel + ' ' + d.note).indexOf(q) === -1) return false;
+      return true;
+    }).sort(function (a, b) {
+      var ra = RANG[statut(a)], rb = RANG[statut(b)];
+      if (ra !== rb) return ra - rb;
+      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+      return b.creeLe - a.creeLe;
+    });
+
+    boite.innerHTML = vues.length
+      ? vues.map(function (d) { return carte(d, false); }).join('')
+      : '<p class="aucun">Aucune dette ne correspond à ces filtres.</p>';
+
+    Object.keys(saisies).forEach(function (id) { var el = $(id); if (el) el.value = saisies[id]; });
+    if (focusId && $(focusId)) $(focusId).focus({ preventScroll: true });
+  }
+
+  function renderPied() {
+    $('pied').innerHTML = store.mode === 'db'
+      ? '<p>Carnet enregistré en ligne : il se met à jour sur tous vos appareils et seul le propriétaire du carnet peut voir ces dettes.</p>'
+      : '<p>Les dettes sont enregistrées dans ce navigateur, sur cet appareil. Si vous effacez les données du navigateur, elles seront perdues.</p>';
+  }
+
+  /* ---------- Formulaire de dette ---------- */
+  function deviseChoisie() { return document.querySelector('input[name="devise"]:checked').value; }
+  function choisirDevise(dev) { $(dev === 'USD' ? 'f-dev-usd' : 'f-dev-gnf').checked = true; majApercu(); }
+  function majApercu() {
+    var dev = deviseChoisie();
+    $('f-suffixe').textContent = dev;
+    var brut = $('f-montant').value;
+    var v = lireMontant(brut);
+    $('f-apercu').textContent = v > 0 ? '= ' + money(arrondi(v, dev), dev) : (brut.trim() ? 'Montant non reconnu : écrivez par exemple 1 500 000' : '');
+  }
+
+  function ouvrirForm(d) {
+    var c = CATS[ui.cat];
+    ui.editId = d ? d.id : null;
+    $('form-titre').textContent = d ? 'Modifier la dette de ' + d.nom : 'Nouvelle dette · ' + c.nom;
+    $('f-submit').textContent = d ? 'Enregistrer les modifications' : 'Enregistrer la dette';
+    $('f-nom').value = d ? d.nom : '';
+    $('f-tel').value = d ? d.tel : '';
+    $('f-montant').value = d ? pourSaisie(d.montant, d.devise) : '';
+    var verrou = !!(d && d.paiements.length);
+    document.querySelectorAll('input[name="devise"]').forEach(function (r) { r.disabled = verrou; });
+    $('f-devise-note').hidden = !verrou;
+    choisirDevise(d ? d.devise : 'GNF');
+    $('f-date').value = d ? d.date : aujourdhui();
+    $('f-echeance').value = d ? d.echeance : '';
+    $('f-note').value = d ? d.note : '';
+    $('form-err').textContent = '';
+    $('form').hidden = false;
+    $('btn-nouvelle').hidden = true;
+    $('form').scrollIntoView({ block: 'nearest', behavior: mouvement });
+    $('f-nom').focus({ preventScroll: true });
+  }
+  function fermerForm() {
+    ui.editId = null;
+    $('form').hidden = true;
+    $('btn-nouvelle').hidden = false;
+  }
+
+  $('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var dev = deviseChoisie();
+    var nom = $('f-nom').value.trim();
+    var montant = lireMontant($('f-montant').value);
+    var date = $('f-date').value || aujourdhui();
+    var ech = $('f-echeance').value;
+    var ancien = ui.editId ? dettes.find(function (x) { return x.id === ui.editId; }) : null;
+    var erreurs = [];
+    if (!nom) erreurs.push('Indiquez un nom.');
+    if (!(arrondi(montant, dev) > 0)) erreurs.push('Indiquez un montant valide, par exemple 1 500 000.');
+    if (ech && ech < date) erreurs.push("L'échéance doit venir après la date de la dette.");
+    if (ancien && arrondi(montant, dev) < totalPaye(ancien)) {
+      erreurs.push('Le montant ne peut pas être inférieur à ce qui a déjà été payé (' + money(totalPaye(ancien), dev) + ').');
+    }
+    if (erreurs.length) { $('form-err').textContent = erreurs.join(' '); return; }
+
+    var d = normaliser({
+      id: ancien ? ancien.id : nouvelId(),
+      categorie: ancien ? ancien.categorie : ui.cat,
+      nom: nom,
+      tel: $('f-tel').value.trim(),
+      montant: montant,
+      devise: dev,
+      date: date,
+      echeance: ech,
+      note: $('f-note').value.trim(),
+      paiements: ancien ? ancien.paiements : [],
+      creeLe: ancien ? ancien.creeLe : Date.now()
+    });
+    fermerForm();
+    sauver(d, ancien ? 'Modifications enregistrées' : 'Dette enregistrée');
+  });
+  $('f-annuler').addEventListener('click', fermerForm);
+  $('f-montant').addEventListener('input', majApercu);
+  document.querySelectorAll('input[name="devise"]').forEach(function (r) { r.addEventListener('change', majApercu); });
+  $('btn-nouvelle').addEventListener('click', function () { ouvrirForm(null); });
+
+  /* ---------- Paiements ---------- */
+  function enregistrerPaiement(d) {
+    var err = $('p-err-' + d.id);
+    var v = arrondi(lireMontant($('p-montant-' + d.id).value), d.devise);
+    var date = $('p-date-' + d.id).value || aujourdhui();
+    var r = resteDu(d);
+    if (!(v > 0)) { err.textContent = 'Indiquez le montant payé.'; return; }
+    if (v > r) { err.textContent = 'Ce paiement dépasse le reste à payer (' + money(r, d.devise) + ').'; return; }
+    var nd = copie(d);
+    nd.paiements.push({ id: 'p' + Date.now().toString(36), montant: v, date: date });
+    ui.payOpen = null;
+    sauver(nd, resteDu(nd) <= 0 ? 'Dette soldée' : 'Paiement enregistré');
+  }
+
+  /* ---------- Événements ---------- */
+  $('cats').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-cat]');
+    if (!b) return;
+    if (ui.cat !== b.dataset.cat) {
+      ui.cat = b.dataset.cat;
+      ui.payOpen = null;
+      ui.confirmDel = null;
+      fermerForm();
+      try { localStorage.setItem(LS_ONGLET, ui.cat); } catch (err) { /* sans importance */ }
+    }
+    render();
+    if (window.innerWidth < 680) $('panel').scrollIntoView({ block: 'start', behavior: mouvement });
+  });
+
+  $('recherche').addEventListener('input', function (e) { ui.q = e.target.value; renderListe(); });
+  $('filtre-statut').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-statut]');
+    if (b) { ui.statut = b.dataset.statut; renderPanel(); renderListe(); }
+  });
+  $('filtre-devise').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-devise]');
+    if (b) { ui.devise = b.dataset.devise; renderPanel(); renderListe(); }
+  });
+
+  $('liste').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-action]');
+    if (!b) return;
+    var action = b.dataset.action;
+    if (action === 'nouvelle') { ouvrirForm(null); return; }
+    var art = b.closest('[data-id]');
+    var d = art && dettes.find(function (x) { return x.id === art.dataset.id; });
+    if (!d) return;
+    switch (action) {
+      case 'payer':
+        ui.payOpen = d.id; ui.confirmDel = null; renderListe();
+        $('p-montant-' + d.id).focus();
+        break;
+      case 'payer-annuler':
+        ui.payOpen = null; renderListe();
+        break;
+      case 'payer-tout':
+        $('p-montant-' + d.id).value = pourSaisie(resteDu(d), d.devise);
+        $('p-montant-' + d.id).focus();
+        break;
+      case 'payer-ok':
+        enregistrerPaiement(d);
+        break;
+      case 'historique':
+        ui.histOpen[d.id] = !ui.histOpen[d.id]; renderListe();
+        break;
+      case 'retirer-paiement': {
+        var nd = copie(d);
+        nd.paiements = nd.paiements.filter(function (p) { return p.id !== b.dataset.pid; });
+        sauver(nd, 'Paiement retiré');
+        break;
+      }
+      case 'modifier':
+        ui.payOpen = null; ui.confirmDel = null; renderListe();
+        ouvrirForm(d);
+        break;
+      case 'supprimer':
+        ui.confirmDel = d.id; ui.payOpen = null; renderListe();
+        break;
+      case 'supprimer-non':
+        ui.confirmDel = null; renderListe();
+        break;
+      case 'supprimer-oui':
+        ui.confirmDel = null;
+        if (ui.editId === d.id) fermerForm();
+        store.supprimer(d.id).then(function () { toast('Dette supprimée'); }).catch(echec);
+        break;
+    }
+  });
+  $('liste').addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' || !/^p-(montant|date)-/.test(e.target.id || '')) return;
+    e.preventDefault();
+    var art = e.target.closest('[data-id]');
+    var d = art && dettes.find(function (x) { return x.id === art.dataset.id; });
+    if (d) enregistrerPaiement(d);
+  });
+
+  /* ---------- Démarrage ---------- */
+  var jour = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+  $('today').textContent = jour.charAt(0).toUpperCase() + jour.slice(1);
+  try {
+    var onglet = localStorage.getItem(LS_ONGLET);
+    if (CATS[onglet]) ui.cat = onglet;
+  } catch (e) { /* sans importance */ }
+  render();
+  store.demarrer();
+})();
+</script>
+</body>
+</html>
