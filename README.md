@@ -1,5 +1,7 @@
 # Carnet de dettes
 
+Oussama diallo
+
 Une fiche pour enregistrer les dettes, séparées en trois catégories, chacune avec son propre bouton d'affichage :
 
 - **Transfert d'argent** : l'argent qu'on me doit sur les transferts
