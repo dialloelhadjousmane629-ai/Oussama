@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Assistant IA</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+:root { --bg:#F3F5F3; --surface:#fff; --ink:#14201A; --muted:#5A6860; --line:#D6DDD8; --me:#14201A; --me-ink:#fff; --focus:#0A7F5A; }
+@media (prefers-color-scheme: dark) { :root { --bg:#0E1411; --surface:#18211C; --ink:#E7EEE9; --muted:#93A39A; --line:#2A362F; --me:#E7EEE9; --me-ink:#0E1411; } }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; }
+header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
+header h1 { font-size: 18px; margin: 0; flex: 1; }
+header a, header button { color: var(--muted); font-size: 14px; background: none; border: 0; cursor: pointer; text-decoration: underline; padding: 0; }
+main { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.msg { max-width: 760px; padding: 10px 14px; border-radius: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.moi { align-self: flex-end; background: var(--me); color: var(--me-ink); }
+.msg.ia { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); }
+.msg.info { align-self: center; color: var(--muted); font-size: 14px; text-align: center; }
+.statut { color: var(--muted); font-size: 13px; margin-left: 4px; }
+form { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--surface); }
+.ligne { display: flex; gap: 8px; }
+textarea { flex: 1; resize: none; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; max-height: 40vh; }
+textarea:focus, button.env:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+button.env { background: var(--me); color: var(--me-ink); border: 0; border-radius: 10px; padding: 0 18px; font: inherit; font-weight: 600; cursor: pointer; }
+button.env:disabled { opacity: .5; cursor: default; }
+label.opt { font-size: 14px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Assistant IA</h1>
+  <button type="button" id="btn-nouveau">Nouvelle discussion</button>
+  <a href="./">Carnet de dettes</a>
+</header>
+<main id="fil" aria-live="polite">
+  <div class="msg info">Posez n'importe quelle question : je peux chercher sur internet, lire des pages web, calculer, écrire des textes ou du code.</div>
+</main>
+<form id="form">
+  <label class="opt"><input type="checkbox" id="carnet"> Partager mon carnet de dettes avec l'assistant</label>
+  <div class="ligne">
+    <textarea id="saisie" rows="1" placeholder="Écrivez votre message…" aria-label="Message"></textarea>
+    <button class="env" id="btn-envoyer" type="submit">Envoyer</button>
+  </div>
+</form>
+<script>
+(function () {
+  var fil = document.getElementById('fil'), saisie = document.getElementById('saisie');
+  var btn = document.getElementById('btn-envoyer'), form = document.getElementById('form');
+  var historique = [], occupe = false, LS_PASS = 'ia:mot-de-passe';
+
+  function lire(cle) { try { return localStorage.getItem(cle); } catch (e) { return null; } }
+  function ecrire(cle, v) { try { if (v === null) localStorage.removeItem(cle); else localStorage.setItem(cle, v); } catch (e) {} }
+
+  function bulle(classe, texte) {
+    var d = document.createElement('div');
+    d.className = 'msg ' + classe; d.textContent = texte;
+    fil.appendChild(d); fil.scrollTop = fil.scrollHeight;
+    return d;
+  }
+
+  async function envoyer(texte) {
+    var pass = lire(LS_PASS);
+    if (!pass) { pass = prompt('Mot de passe de l’assistant :'); if (!pass) return; }
+    occupe = true; btn.disabled = true;
+    historique.push({ role: 'user', content: texte });
+    bulle('moi', texte);
+    var rep = bulle('ia', ''), statut = document.createElement('span'), acc = '';
+    statut.className = 'statut'; statut.textContent = 'Réflexion…'; rep.appendChild(statut);
+    var corps = { messages: historique };
+    if (document.getElementById('carnet').checked) corps.carnet = lire('carnet-dettes:v1') || '[]';
+    try {
+      var res = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json', 'x-mot-de-passe': pass }, body: JSON.stringify(corps) });
+      if (!res.ok) {
+        var e = await res.json().catch(function () { return {}; });
+        if (res.status === 401) ecrire(LS_PASS, null);
+        throw new Error(e.erreur || 'Erreur ' + res.status);
+      }
+      ecrire(LS_PASS, pass);
+      var lecteur = res.body.getReader(), dec = new TextDecoder(), tampon = '';
+      for (;;) {
+        var r = await lecteur.read(); if (r.done) break;
+        tampon += dec.decode(r.value, { stream: true });
+        var blocs = tampon.split('\n\n'); tampon = blocs.pop();
+        for (var i = 0; i < blocs.length; i++) {
+          if (blocs[i].indexOf('data: ') !== 0) continue;
+          var ev = JSON.parse(blocs[i].slice(6));
+          if (ev.texte) { acc += ev.texte; rep.textContent = acc; }
+          else if (ev.outil) { statut.textContent = ev.outil === 'web_search' ? 'Recherche sur internet…' : 'Lecture d’une page…'; if (!rep.contains(statut)) rep.appendChild(statut); }
+          else if (ev.erreur) throw new Error(ev.erreur);
+          fil.scrollTop = fil.scrollHeight;
+        }
+      }
+      if (!acc) { rep.textContent = '(Pas de réponse.)'; }
+      historique.push({ role: 'assistant', content: acc || '(Pas de réponse.)' });
+    } catch (err) {
+      historique.pop();
+      rep.className = 'msg info'; rep.textContent = 'Erreur : ' + err.message;
+    }
+    occupe = false; btn.disabled = false; saisie.focus();
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var t = saisie.value.trim(); if (!t || occupe) return;
+    saisie.value = ''; saisie.style.height = 'auto';
+    envoyer(t);
+  });
+  saisie.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); }
+  });
+  saisie.addEventListener('input', function () { saisie.style.height = 'auto'; saisie.style.height = saisie.scrollHeight + 'px'; });
+  document.getElementById('btn-nouveau').addEventListener('click', function () {
+    if (occupe) return;
+    historique = []; fil.innerHTML = ''; bulle('info', 'Nouvelle discussion.');
+  });
+})();
+</script>
+</body>
+</html>

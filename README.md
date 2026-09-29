@@ -33,3 +33,16 @@ Le site s'installe comme une application, avec sa propre icône, et s'ouvre mêm
 - **Ordinateur (Chrome ou Edge)** : ouvrez https://oussama.dialloelhadjousmane629.workers.dev puis cliquez sur « Installer sur cet appareil » en haut de la page (ou sur l'icône d'installation dans la barre d'adresse). Le raccourci apparaît sur le bureau et dans le menu Démarrer.
 - **Android (Chrome)** : menu ⋮ puis « Ajouter à l'écran d'accueil » ou « Installer l'application ».
 - **iPhone (Safari)** : bouton Partager puis « Sur l'écran d'accueil ».
+
+## Assistant IA
+
+La page `/ia.html` (bouton « Assistant IA » dans le carnet) est un assistant basé sur Claude. Il répond en français, cherche sur internet, lit des pages web, calcule et rédige (textes, code, plans, tableaux). Il peut aussi lire le carnet de dettes si la case « Partager mon carnet » est cochée.
+
+Il n'a accès qu'à la recherche web et à la lecture de pages : il n'envoie pas de messages et ne modifie rien tout seul.
+
+Configuration sur Cloudflare (Workers → oussama → Settings → Variables and Secrets), deux secrets :
+
+- `ANTHROPIC_API_KEY` : votre clé de l'API Anthropic (console.anthropic.com)
+- `MOT_DE_PASSE` : le mot de passe demandé sur la page pour éviter que d'autres utilisent votre clé
+
+En local : `npm install`, un fichier `.dev.vars` avec ces deux lignes, puis `npx wrangler dev`.
