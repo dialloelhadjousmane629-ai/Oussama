@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0b1f3a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FAMILLE BEST">
 <title>LA FAMILLE BEST — Gestion de caisse</title>
 <style>
 :root{--navy:#0b1f3a;--navy2:#13335c;--gold:#c9a227;--gold2:#fbf3d6;--bg:#f3f5f9;--card:#fff;--ink:#14213d;--mut:#5c6b84;--line:#e1e6ef;--ok:#17743f;--ok2:#e2f5e9;--bad:#b3261e;--bad2:#fdeceb;--mid:#a05a00;--mid2:#fff1d6;--info:#1c5cb8;--info2:#e5eefc}
@@ -75,6 +81,16 @@ const mlabel = m => MOIS[+m.slice(5) - 1] + ' ' + m.slice(0, 4);
 const fdate = d => d ? String(d).slice(0, 10).split('-').reverse().join('/') : '';
 const fts = t => { const d = new Date(t); return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); };
 function monthsRange(a, b) { const out = []; let [y, m] = a.split('-').map(Number); const [y2, m2] = b.split('-').map(Number); while (y < y2 || (y === y2 && m <= m2)) { out.push(y + '-' + String(m).padStart(2, '0')); if (++m > 12) { m = 1; y++; } } return out; }
+/* ====== Installation comme application ====== */
+let installEvt = null;
+const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
+addEventListener('appinstalled', () => { installEvt = null; if (S) shell(); });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { scope: '/caisse/' }).catch(() => {});
+async function installApp() {
+  if (installEvt) { installEvt.prompt(); await installEvt.userChoice; installEvt = null; return; }
+  alert(/iphone|ipad|ipod/i.test(navigator.userAgent) ? 'Sur iPhone / iPad (Safari) : appuyez sur le bouton Partager, puis « Sur l’écran d’accueil ».' : 'Sur Android (Chrome) : ouvrez le menu ⋮ puis « Installer l’application » (ou « Ajouter à l’écran d’accueil »). Sur ordinateur (Chrome / Edge) : cliquez sur l’icône d’installation dans la barre d’adresse.');
+}
 const ROLE = { public: 'Visiteur (lecture seule)', admin: 'Administrateur', tresorier: 'Trésorier', consultation: 'Consultation' };
 
 /* ====== API ====== */
@@ -165,7 +181,7 @@ let view = 'dash', Y = 2026, cotMode = 'mois', cotMonth = '', q = '', jmode = 'j
 const TABS = () => [['dash', '📊 Tableau de bord'], ['mem', '👥 Membres'], ['cot', '💳 Cotisations'], ['tx', '🧾 Dépenses & recettes'], ['jour', '📒 Journal'], ['rep', '📑 Rapports'], ['years', '🗂 Historique des années'], ...(isAdmin() ? [['adm', '⚙️ Administration']] : [])];
 function shell() {
   const t = S.user;
-  $('#app').innerHTML = `<header><div class="logo">FB</div><h1>${NAME}<small>Gestion de caisse · Franc guinéen (GNF) · cotisation ${gnf(S.fee)} / mois</small></h1><div class="who">${t.role === 'public' ? `<span class="tag t-off">${ROLE.public}</span> <button class="b g sm" data-a="login">Connexion (administrateurs)</button>` : `${esc(t.name)}<br><span class="tag t-off">${ROLE[t.role]}</span> <button class="b s sm" data-a="acct">Mon compte</button> <button class="b s sm" data-a="logout">Quitter</button>`}</div></header>
+  $('#app').innerHTML = `<header><div class="logo">FB</div><h1>${NAME}<small>Gestion de caisse · Franc guinéen (GNF) · cotisation ${gnf(S.fee)} / mois</small></h1><div class="who">${standalone ? '' : '<button class="b s sm" style="background:#fff2;color:#fff;border-color:#fff6" data-a="install">📲 Installer l’application</button><br>'}${t.role === 'public' ? `<span class="tag t-off">${ROLE.public}</span> <button class="b g sm" data-a="login">Connexion (administrateurs)</button>` : `${esc(t.name)}<br><span class="tag t-off">${ROLE[t.role]}</span> <button class="b s sm" data-a="acct">Mon compte</button> <button class="b s sm" data-a="logout">Quitter</button>`}</div></header>
   <nav>${TABS().map(([k, l]) => `<button data-v="${k}" class="${k === view ? 'on' : ''}">${l}</button>`).join('')}</nav><main>${({ dash, mem, cot, tx, jour, rep: repView, years: yearsView, adm })[view]()}</main>`;
   document.querySelectorAll('nav button').forEach(b => b.onclick = () => { view = b.dataset.v; q = ''; if (view === 'adm') loadAdmin(); else shell(); window.scrollTo(0, 0); });
   bind();
@@ -403,7 +419,7 @@ function bind() {
   document.querySelectorAll('[data-a]').forEach(b => b.onclick = async e => {
     e.preventDefault(); const a = b.dataset.a, id = +b.dataset.id;
     try {
-      if (a === 'logout') logout(); else if (a === 'login') showAuth();
+      if (a === 'logout') logout(); else if (a === 'login') showAuth(); else if (a === 'install') await installApp();
       else if (a === 'acct') acctForm(); else if (a === 'addm') memberForm(); else if (a === 'editm') memberForm(memberById(id)); else if (a === 'mdet') memberDetail(memberById(id));
       else if (a === 'pay') { $('#dlg').open && $('#dlg').close(); payForm(id || undefined, b.dataset.mo); }
       else if (a === 'addtx') txForm(b.dataset.k); else if (a === 'void') voidForm(S.ops.find(o => o.id === id)); else if (a === 'more') { jmax += 300; shell(); }
