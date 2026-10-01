@@ -88,8 +88,15 @@ addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = 
 addEventListener('appinstalled', () => { installEvt = null; if (S) shell(); });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { scope: '/caisse/' }).catch(() => {});
 async function installApp() {
-  if (installEvt) { installEvt.prompt(); await installEvt.userChoice; installEvt = null; return; }
-  alert(/iphone|ipad|ipod/i.test(navigator.userAgent) ? 'Sur iPhone / iPad (Safari) : appuyez sur le bouton Partager, puis « Sur l’écran d’accueil ».' : 'Sur Android (Chrome) : ouvrez le menu ⋮ puis « Installer l’application » (ou « Ajouter à l’écran d’accueil »). Sur ordinateur (Chrome / Edge) : cliquez sur l’icône d’installation dans la barre d’adresse.');
+  if (installEvt) {
+    try { installEvt.prompt(); const r = await installEvt.userChoice; installEvt = null; if (r.outcome === 'accepted') return; } catch { installEvt = null; }
+  }
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent), inApp = /FBAN|FBAV|Instagram|WhatsApp|Line\/|Messenger|; wv\)/i.test(navigator.userAgent);
+  const d = $('#dlg');
+  d.innerHTML = `<h3 style="margin-top:0">📲 Installer l’application</h3>${inApp ? '<div class="warn">Vous êtes dans le navigateur d’une autre application (WhatsApp, Facebook…). Ouvrez d’abord ce lien dans <b>Chrome</b> (menu ⋮ → « Ouvrir dans Chrome »).</div>' : ''}
+  ${ios ? '<ol><li>Ouvrez cette page dans <b>Safari</b>.</li><li>Appuyez sur le bouton <b>Partager</b> (carré avec une flèche).</li><li>Choisissez <b>« Sur l’écran d’accueil »</b>, puis <b>Ajouter</b>.</li></ol>' : '<ol><li>Dans <b>Chrome</b>, touchez le menu <b>⋮</b> (trois points, en haut à droite).</li><li>Touchez <b>« Installer l’application »</b> ou <b>« Ajouter à l’écran d’accueil »</b>.</li><li>Confirmez avec <b>Installer</b>. L’icône FB apparaît sur votre écran d’accueil.</li></ol><p class="muted" style="font-size:13px">Si ces choix n’apparaissent pas : rechargez la page, attendez quelques secondes et réessayez.</p>'}
+  <div class="row" style="margin:12px 0 0;justify-content:flex-end"><button type="button" class="b g" id="dclose">Compris</button></div>`;
+  if (!d.open) d.showModal(); $('#dclose').onclick = () => d.close();
 }
 const ROLE = { public: 'Visiteur (lecture seule)', admin: 'Administrateur', tresorier: 'Trésorier', consultation: 'Consultation' };
 
