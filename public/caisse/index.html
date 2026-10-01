@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>LA FAMILLE BEST — Gestion de caisse</title>
+<style>
+:root{--bg:#f4f6f3;--card:#fff;--ink:#1b2a22;--mut:#66756d;--line:#dfe6e0;--pri:#17653f;--pri2:#e6f3ec;--gold:#b7852b;--red:#b3261e;--red2:#fbe9e7;--org:#b86e00;--org2:#fff3dc;--grn2:#e3f4e8}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1713;--card:#17211b;--ink:#e8f0ea;--mut:#9fb0a5;--line:#2a3a30;--pri:#4cc38a;--pri2:#173326;--gold:#e0b45a;--red:#ff8a80;--red2:#3a1a17;--org:#ffb347;--org2:#3a2c10;--grn2:#16301f}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--pri);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+@media(prefers-color-scheme:dark){header{color:#06180e}}
+header h1{font-size:17px;margin:0;flex:1;min-width:200px;letter-spacing:.3px}
+header small{display:block;font-weight:400;opacity:.85;font-size:12px}
+nav{display:flex;gap:4px;overflow-x:auto;padding:8px 12px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav button{white-space:nowrap;border:0;background:none;color:var(--mut);padding:8px 12px;border-radius:8px;font:inherit;cursor:pointer}
+nav button.on{background:var(--pri2);color:var(--pri);font-weight:600}
+main{max-width:1100px;margin:0 auto;padding:16px}
+h2{margin:0 0 12px;font-size:20px}h3{margin:18px 0 8px;font-size:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.kpi .l{color:var(--mut);font-size:13px}.kpi .v{font-size:22px;font-weight:700;margin-top:2px}
+.pos{color:var(--pri)}.neg{color:var(--red)}
+button.b,a.b{border:1px solid var(--pri);background:var(--pri);color:#fff;padding:8px 14px;border-radius:8px;font:inherit;cursor:pointer;text-decoration:none;display:inline-block}
+@media(prefers-color-scheme:dark){button.b,a.b{color:#06180e}}
+button.b.s{background:none;color:var(--pri)}button.b.d{background:var(--red);border-color:var(--red);color:#fff}
+button.sm{padding:4px 9px;font-size:13px}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--card);color:var(--ink)}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 3px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.row>*{flex:0 0 auto}.row .grow{flex:1;min-width:160px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600}
+.t-ok{background:var(--grn2);color:var(--pri)}.t-bad{background:var(--red2);color:var(--red)}.t-mid{background:var(--org2);color:var(--org)}.t-off{background:var(--line);color:var(--mut)}
+.cell{width:100%;min-width:34px;border:0;border-radius:6px;padding:6px 0;cursor:pointer;font-size:12px;font-weight:700}
+.c-ok{background:var(--grn2);color:var(--pri)}.c-bad{background:var(--red2);color:var(--red)}.c-mid{background:var(--org2);color:var(--org)}.c-na{background:var(--line);color:var(--mut);cursor:default}
+.bars{display:flex;align-items:flex-end;gap:6px;height:140px}
+.bars div.m{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;font-size:11px;color:var(--mut)}
+.bars .p{display:flex;gap:2px;align-items:flex-end;height:110px;width:100%;justify-content:center}
+.bars .p i{display:block;width:40%;border-radius:3px 3px 0 0;min-height:1px}
+.warn{background:var(--org2);color:var(--org);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+dialog{border:0;border-radius:14px;padding:18px;width:min(460px,94vw);background:var(--card);color:var(--ink);box-shadow:0 10px 40px #0006}
+dialog::backdrop{background:#0008}
+.lock{max-width:380px;margin:12vh auto;padding:0 16px}
+.muted{color:var(--mut)}.right{text-align:right}
+@media print{header,nav,.noprint,button{display:none!important}body{background:#fff;color:#000}.card{border:0;padding:0}main{padding:0}:root{--ink:#000;--mut:#444;--line:#bbb}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<dialog id="dlg"></dialog>
+<script>
+'use strict';
+/* ====== Constantes ====== */
+const APP = 'LA FAMILLE BEST — GESTION DE CAISSE';
+const FEE = 10000, START = '2026-10', KEY = 'fbCaisse.v1', IDLE_MS = 5 * 60 * 1000;
+const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const CAT_IN = ['Don','Amende','Activité','Autre recette'];
+const CAT_OUT = ['Aide sociale','Événement','Fonctionnement','Transport','Autre dépense'];
+
+/* ====== Utilitaires ====== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const gnf = n => (n < 0 ? '-' : '') + String(Math.abs(Math.round(n))).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' GNF';
+const amt = s => parseInt(String(s).replace(/[^\d]/g, ''), 10) || 0;
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const ym = d => String(d).slice(0, 7);
+const yr = d => +String(d).slice(0, 4);
+const curYM = () => ym(today());
+const mlabel = m => MOIS[+m.slice(5) - 1] + ' ' + m.slice(0, 4);
+const fdate = d => d ? d.split('-').reverse().join('/') : '';
+function monthsRange(a, b) { const out = []; let [y, m] = a.split('-').map(Number); const [y2, m2] = b.split('-').map(Number); while (y < y2 || (y === y2 && m <= m2)) { out.push(y + '-' + String(m).padStart(2, '0')); if (++m > 12) { m = 1; y++; } } return out; }
+const csvCell = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+
+/* ====== Chiffrement (AES-GCM, clé dérivée du mot de passe) ====== */
+const te = new TextEncoder(), td = new TextDecoder();
+const b64 = u => { let s = ''; for (let i = 0; i < u.length; i += 8192) s += String.fromCharCode(...u.subarray(i, i + 8192)); return btoa(s); };
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function deriveKey(pw, salt) {
+  const m = await crypto.subtle.importKey('raw', te.encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 250000, hash: 'SHA-256' }, m, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+let S = null, cryptoKey = null, cryptoSalt = null;
+async function seal(state) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, te.encode(JSON.stringify(state))));
+  return JSON.stringify({ v: 1, salt: b64(cryptoSalt), iv: b64(iv), data: b64(ct) });
+}
+async function openBlob(blob, pw) {
+  const o = JSON.parse(blob), salt = unb64(o.salt), key = await deriveKey(pw, salt);
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(o.iv) }, key, unb64(o.data));
+  return { state: JSON.parse(td.decode(pt)), key, salt };
+}
+let saveChain = Promise.resolve();
+function save() { saveChain = saveChain.then(async () => { try { localStorage.setItem(KEY, await seal(S)); } catch (e) { toast('Erreur d’enregistrement : ' + e.message); } }); return saveChain; }
+function log(msg) { S.audit.unshift({ t: new Date().toISOString(), msg }); S.audit.length = Math.min(S.audit.length, 500); }
+function toast(m) { alert(m); }
+
+/* ====== Calculs ====== */
+const firstMonth = m => (m.joined > START ? m.joined : START);
+function dueMonths(m, upTo = curYM()) { const a = firstMonth(m); const end = m.leftMonth && m.leftMonth < upTo ? m.leftMonth : upTo; return a <= end ? monthsRange(a, end) : []; }
+function paidFor(mid, month) { return S.payments.filter(p => p.memberId === mid && p.month === month).reduce((s, p) => s + p.amount, 0); }
+function memberDebt(m, upTo = curYM(), paidUntilYear = 9999) {
+  let d = 0;
+  for (const mo of dueMonths(m, upTo)) {
+    const paid = S.payments.filter(p => p.memberId === m.id && p.month === mo && yr(p.date) <= paidUntilYear).reduce((s, p) => s + p.amount, 0);
+    d += Math.max(0, FEE - paid);
+  }
+  return d;
+}
+const yearsList = () => { const out = []; for (let y = 2026; y <= yr(today()); y++) out.push(y); return out; };
+function yearTotals(y) {
+  const sum = a => a.reduce((s, x) => s + x.amount, 0);
+  const before = (arr) => arr.filter(x => yr(x.date) < y);
+  const inY = (arr) => arr.filter(x => yr(x.date) === y);
+  const opening = sum(before(S.payments)) + sum(before(S.txs.filter(t => t.type === 'in'))) - sum(before(S.txs.filter(t => t.type === 'out')));
+  const contrib = sum(inY(S.payments)), income = sum(inY(S.txs.filter(t => t.type === 'in'))), expense = sum(inY(S.txs.filter(t => t.type === 'out')));
+  return { opening, contrib, income, expense, closing: opening + contrib + income - expense };
+}
+const balanceNow = () => yearTotals(yr(today())).closing;
+const lastClosedYear = () => Math.max(0, ...Object.keys(S.closed).map(Number));
+const isLocked = date => yr(date) <= lastClosedYear();
+function lockMsg(date) { if (isLocked(date)) { toast('L’exercice ' + yr(date) + ' est clôturé et archivé : il ne peut plus être modifié.'); return true; } return false; }
+
+/* Archivage annuel automatique : tout exercice terminé est figé dès l'ouverture suivante */
+function autoArchive() {
+  let changed = false;
+  for (let y = 2026; y < yr(today()); y++) {
+    if (S.closed[y]) continue;
+    const t = yearTotals(y), cut = y + '-12';
+    const byMember = S.members.map(m => ({ name: m.name, paid: S.payments.filter(p => p.memberId === m.id && yr(p.date) === y).reduce((s, p) => s + p.amount, 0), debt: memberDebt(m, cut, y) }));
+    const cats = {};
+    S.txs.filter(x => yr(x.date) === y).forEach(x => { const k = (x.type === 'in' ? '+ ' : '− ') + x.category; cats[k] = (cats[k] || 0) + x.amount; });
+    S.closed[y] = { ...t, closedAt: new Date().toISOString(), members: S.members.length, byMember, cats, debts: byMember.reduce((s, x) => s + x.debt, 0) };
+    log('Exercice ' + y + ' clôturé et archivé automatiquement (solde de clôture ' + gnf(t.closing) + ')');
+    changed = true;
+  }
+  return changed;
+}
+
+/* ====== Démarrage / verrouillage ====== */
+const emptyState = () => ({ v: 1, members: [], payments: [], txs: [], audit: [], closed: {} });
+let idleTimer = null;
+function resetIdle() { clearTimeout(idleTimer); if (S) idleTimer = setTimeout(lock, IDLE_MS); }
+['click', 'keydown', 'touchstart'].forEach(e => addEventListener(e, resetIdle, { passive: true }));
+function lock() { S = null; cryptoKey = null; clearTimeout(idleTimer); $('#dlg').open && $('#dlg').close(); showLock(); }
+
+function showLock(msg = '') {
+  const exists = !!localStorage.getItem(KEY);
+  $('#app').innerHTML = `<div class="lock card"><h2 style="text-align:center">LA FAMILLE BEST</h2><p class="muted" style="text-align:center;margin-top:-6px">Gestion de caisse</p>
+  <form id="lf">${exists ? '' : '<p class="muted">Première utilisation : choisissez un mot de passe (6 caractères minimum). Il chiffre toutes les données. <b>S’il est perdu, les données sont irrécupérables</b> : faites des sauvegardes.</p>'}
+  <label>Mot de passe</label><input type="password" id="pw" autocomplete="${exists ? 'current-password' : 'new-password'}" required minlength="6">
+  ${exists ? '' : '<label>Confirmer</label><input type="password" id="pw2" required minlength="6">'}
+  <p class="neg" id="lerr">${esc(msg)}</p><button class="b" style="width:100%">${exists ? 'Déverrouiller' : 'Créer la caisse'}</button></form>
+  ${exists ? '<p style="text-align:center"><a href="#" id="restore" class="muted">Restaurer une sauvegarde</a></p>' : ''}</div>`;
+  $('#pw').focus();
+  $('#lf').onsubmit = async e => {
+    e.preventDefault(); const pw = $('#pw').value, err = t => $('#lerr').textContent = t;
+    const fails = +localStorage.getItem('fbCaisse.fails') || 0, until = +localStorage.getItem('fbCaisse.until') || 0;
+    if (Date.now() < until) return err('Trop d’essais. Réessayez dans ' + Math.ceil((until - Date.now()) / 1000) + ' s.');
+    if (!exists) {
+      if (pw.length < 6) return err('6 caractères minimum.');
+      if (pw !== $('#pw2').value) return err('Les mots de passe ne correspondent pas.');
+      cryptoSalt = crypto.getRandomValues(new Uint8Array(16)); cryptoKey = await deriveKey(pw, cryptoSalt);
+      S = emptyState(); log('Caisse créée'); await save(); return start();
+    }
+    try {
+      const r = await openBlob(localStorage.getItem(KEY), pw);
+      S = r.state; cryptoKey = r.key; cryptoSalt = r.salt; localStorage.removeItem('fbCaisse.fails'); start();
+    } catch { const f = fails + 1; localStorage.setItem('fbCaisse.fails', f); if (f >= 5) localStorage.setItem('fbCaisse.until', Date.now() + Math.min(300, 15 * (f - 4)) * 1000); err('Mot de passe incorrect.'); }
+  };
+  const r = $('#restore'); if (r) r.onclick = e => { e.preventDefault(); importBackup(); };
+}
+async function start() { if (autoArchive()) await save(); view = 'dash'; resetIdle(); shell(); }
+
+/* ====== Interface ====== */
+let view = 'dash', repYear = yr(today()), cotYear = yr(today()), txYear = yr(today()), txType = '', q = '';
+const TABS = [['dash', 'Tableau de bord'], ['mem', 'Membres'], ['cot', 'Cotisations'], ['tx', 'Recettes & dépenses'], ['debt', 'Dettes'], ['rep', 'Rapports'], ['arch', 'Archives'], ['set', 'Paramètres']];
+function shell() {
+  $('#app').innerHTML = `<header><h1>${APP}<small>Franc guinéen (GNF) · cotisation ${gnf(FEE)} / mois · depuis le 1er octobre 2026</small></h1><button class="b s" style="background:#fff2;color:inherit;border-color:#fff8" id="lk">🔒 Verrouiller</button></header>
+  <nav>${TABS.map(([k, l]) => `<button data-v="${k}" class="${k === view ? 'on' : ''}">${l}</button>`).join('')}</nav><main id="main"></main>`;
+  $('#lk').onclick = lock;
+  document.querySelectorAll('nav button').forEach(b => b.onclick = () => { view = b.dataset.v; shell(); });
+  $('#main').innerHTML = ({ dash, mem, cot, tx, debt, rep, arch, set })[view]();
+  bind();
+}
+function modal(html, onSubmit) {
+  const d = $('#dlg'); d.innerHTML = '<form method="dialog" id="mf">' + html + '</form>'; d.showModal();
+  $('#mf').onsubmit = async e => { e.preventDefault(); if (await onSubmit(new FormData(e.target)) !== false) { d.close(); shell(); } };
+  d.querySelector('[data-close]')?.addEventListener('click', () => d.close());
+}
+const closeBtns = (ok = 'Enregistrer') => `<div class="row" style="margin-top:14px;justify-content:flex-end"><button type="button" class="b s" data-close>Annuler</button><button class="b">${ok}</button></div>`;
+
+/* --- Tableau de bord --- */
+function dash() {
+  const y = yr(today()), t = yearTotals(y), cm = curYM();
+  const act = S.members.filter(m => m.active), due = act.filter(m => dueMonths(m).includes(cm));
+  const paidNow = due.filter(m => paidFor(m.id, cm) >= FEE).length;
+  const debts = S.members.reduce((s, m) => s + memberDebt(m), 0);
+  const months = monthsRange(y + '-01', y + '-12');
+  const mt = months.map(m => ({ m, i: S.payments.filter(p => yr(p.date) === y && ym(p.date) === m).reduce((s, p) => s + p.amount, 0) + S.txs.filter(x => x.type === 'in' && ym(x.date) === m).reduce((s, x) => s + x.amount, 0), o: S.txs.filter(x => x.type === 'out' && ym(x.date) === m).reduce((s, x) => s + x.amount, 0) }));
+  const max = Math.max(1, ...mt.flatMap(x => [x.i, x.o]));
+  return `<h2>Tableau de bord ${y}</h2>${today() < START + '-01' ? '<div class="warn">Démarrage de la caisse le 1er octobre 2026.</div>' : ''}
+  <div class="grid"><div class="card kpi"><div class="l">Solde actuel de la caisse</div><div class="v ${balanceNow() < 0 ? 'neg' : 'pos'}">${gnf(balanceNow())}</div></div>
+  <div class="card kpi"><div class="l">Cotisations encaissées ${y}</div><div class="v">${gnf(t.contrib)}</div></div>
+  <div class="card kpi"><div class="l">Autres recettes ${y}</div><div class="v">${gnf(t.income)}</div></div>
+  <div class="card kpi"><div class="l">Dépenses ${y}</div><div class="v">${gnf(t.expense)}</div></div>
+  <div class="card kpi"><div class="l">Dettes de cotisation</div><div class="v neg">${gnf(debts)}</div></div>
+  <div class="card kpi"><div class="l">Membres actifs · ${mlabel(cm)}</div><div class="v">${act.length}</div><div class="l">${paidNow} / ${due.length} à jour ce mois</div></div></div>
+  <div class="card"><h3 style="margin-top:0">Mois par mois ${y} <span class="muted" style="font-weight:400;font-size:13px">(<span class="pos">■</span> entrées · <span class="neg">■</span> sorties)</span></h3>
+  <div class="bars">${mt.map(x => `<div class="m"><div class="p"><i style="background:var(--pri);height:${x.i / max * 100}%" title="${gnf(x.i)}"></i><i style="background:var(--red);height:${x.o / max * 100}%" title="${gnf(x.o)}"></i></div>${MOIS[+x.m.slice(5) - 1].slice(0, 3)}</div>`).join('')}</div></div>
+  ${S.members.length ? '' : '<div class="warn">Commencez par ajouter les membres dans l’onglet « Membres ».</div>'}`;
+}
+
+/* --- Membres --- */
+function mem() {
+  const list = S.members.filter(m => (m.name + m.phone).toLowerCase().includes(q.toLowerCase())).sort((a, b) => a.name.localeCompare(b.name));
+  return `<h2>Membres (${S.members.length})</h2><div class="row"><input class="grow" id="q" placeholder="Rechercher un membre…" value="${esc(q)}"><button class="b" data-a="addm">+ Ajouter un membre</button></div>
+  <div class="card tw"><table><tr><th>Nom</th><th>Téléphone</th><th>Depuis</th><th>Statut</th><th class="n">Dette</th><th></th></tr>
+  ${list.map(m => { const d = memberDebt(m); return `<tr><td>${esc(m.name)}</td><td>${esc(m.phone)}</td><td>${mlabel(firstMonth(m))}</td><td><span class="tag ${m.active ? 't-ok' : 't-off'}">${m.active ? 'Actif' : 'Sorti'}</span></td><td class="n ${d ? 'neg' : ''}">${gnf(d)}</td><td class="right"><button class="b s sm" data-a="editm" data-id="${m.id}">Modifier</button></td></tr>`; }).join('') || '<tr><td colspan="6" class="muted">Aucun membre.</td></tr>'}</table></div>`;
+}
+function memberForm(m) {
+  modal(`<h3 style="margin-top:0">${m ? 'Modifier' : 'Nouveau'} membre</h3><label>Nom complet</label><input name="name" required value="${esc(m?.name)}"><label>Téléphone</label><input name="phone" value="${esc(m?.phone)}">
+  <label>Premier mois de cotisation</label><input type="month" name="joined" min="${START}" required value="${m?.joined || (curYM() > START ? curYM() : START)}">
+  ${m ? `<label>Statut</label><select name="active"><option value="1" ${m.active ? 'selected' : ''}>Actif</option><option value="0" ${m.active ? '' : 'selected'}>Sorti (plus de cotisation à partir du mois indiqué)</option></select><label>Dernier mois dû (si sorti)</label><input type="month" name="left" value="${m.leftMonth || ''}">` : ''}
+  ${m ? '<div class="row" style="margin-top:10px"><button type="button" class="b d sm" id="delm">Supprimer ce membre</button></div>' : ''}${closeBtns()}`, fd => {
+    const name = fd.get('name').trim(); if (!name) return false;
+    if (m) { m.name = name; m.phone = fd.get('phone').trim(); m.joined = fd.get('joined') < START ? START : fd.get('joined'); m.active = fd.get('active') === '1'; m.leftMonth = !m.active ? (fd.get('left') || curYM()) : ''; log('Membre modifié : ' + name); }
+    else { S.members.push({ id: uid(), name, phone: fd.get('phone').trim(), joined: fd.get('joined') < START ? START : fd.get('joined'), active: true, leftMonth: '' }); log('Membre ajouté : ' + name); }
+    return save();
+  });
+  const del = $('#delm'); if (del) del.onclick = () => {
+    if (S.payments.some(p => p.memberId === m.id)) return toast('Ce membre a des paiements enregistrés : marquez-le « Sorti » plutôt que de le supprimer (l’historique reste intact).');
+    if (confirm('Supprimer ' + m.name + ' ?')) { S.members = S.members.filter(x => x !== m); log('Membre supprimé : ' + m.name); save(); $('#dlg').close(); shell(); }
+  };
+}
+
+/* --- Cotisations --- */
+function cot() {
+  const months = monthsRange(cotYear + '-01', cotYear + '-12'), cm = curYM();
+  const list = S.members.filter(m => (m.name).toLowerCase().includes(q.toLowerCase())).sort((a, b) => a.name.localeCompare(b.name));
+  const yopts = yearsList().map(y => `<option ${y === cotYear ? 'selected' : ''}>${y}</option>`).join('');
+  return `<h2>Cotisations mensuelles — ${gnf(FEE)} par membre</h2><div class="row"><select id="cy" style="width:auto">${yopts}</select><input class="grow" id="q" placeholder="Rechercher…" value="${esc(q)}"><span class="muted">Touchez une case pour encaisser. <span class="tag t-ok">payé</span> <span class="tag t-mid">partiel</span> <span class="tag t-bad">impayé</span></span></div>
+  <div class="card tw"><table><tr><th>Membre</th>${months.map(m => `<th class="n">${MOIS[+m.slice(5) - 1].slice(0, 3)}</th>`).join('')}</tr>
+  ${list.map(m => `<tr><td>${esc(m.name)}</td>${months.map(mo => { const isDue = dueMonths(m, cm > mo ? cm : mo).includes(mo) && mo <= cm; const p = paidFor(m.id, mo); const cls = !isDue && !p ? 'c-na' : p >= FEE ? 'c-ok' : p > 0 ? 'c-mid' : mo < cm || mo === cm ? 'c-bad' : 'c-na'; const lbl = p >= FEE ? '✓' : p > 0 ? Math.round(p / 1000) + 'k' : isDue ? '—' : ''; return `<td><button class="cell ${cls}" ${cls === 'c-na' && !p ? 'disabled' : `data-a="pay" data-id="${m.id}" data-mo="${mo}"`}>${lbl}</button></td>`; }).join('')}</tr>`).join('') || `<tr><td class="muted">Aucun membre.</td></tr>`}</table></div>`;
+}
+function payForm(mid, mo) {
+  const m = S.members.find(x => x.id === mid), paid = paidFor(mid, mo), ps = S.payments.filter(p => p.memberId === mid && p.month === mo);
+  modal(`<h3 style="margin-top:0">${esc(m.name)} — ${mlabel(mo)}</h3><p class="muted">Déjà payé : <b>${gnf(paid)}</b> sur ${gnf(FEE)}. Reste : <b>${gnf(Math.max(0, FEE - paid))}</b></p>
+  ${ps.map(p => `<div class="row"><span class="grow">${fdate(p.date)} · ${gnf(p.amount)} ${p.note ? '· ' + esc(p.note) : ''}</span><button type="button" class="b d sm" data-delp="${p.id}">Annuler</button></div>`).join('')}
+  <label>Montant encaissé (GNF)</label><input name="amount" inputmode="numeric" required value="${Math.max(0, FEE - paid) || ''}"><label>Date de paiement</label><input type="date" name="date" required value="${today()}" max="${today()}"><label>Note (mode de paiement, etc.)</label><input name="note">${closeBtns('Encaisser')}`, fd => {
+    const a = amt(fd.get('amount')), date = fd.get('date'); if (a <= 0) return false; if (lockMsg(date)) return false;
+    if (paid + a > FEE && !confirm('Le total dépasse ' + gnf(FEE) + ' pour ce mois. Continuer ?')) return false;
+    S.payments.push({ id: uid(), memberId: mid, month: mo, amount: a, date, note: fd.get('note').trim() }); log(`Cotisation ${mlabel(mo)} : ${m.name} ${gnf(a)}`); return save();
+  });
+  document.querySelectorAll('[data-delp]').forEach(b => b.onclick = () => {
+    const p = S.payments.find(x => x.id === b.dataset.delp); if (lockMsg(p.date)) return;
+    if (confirm('Annuler ce paiement ?')) { S.payments = S.payments.filter(x => x !== p); log(`Paiement annulé : ${m.name} ${mlabel(mo)} ${gnf(p.amount)}`); save(); $('#dlg').close(); shell(); }
+  });
+}
+
+/* --- Recettes & dépenses --- */
+function tx() {
+  const y = txYear, list = S.txs.filter(x => yr(x.date) === y && (!txType || x.type === txType) && (x.label + x.category).toLowerCase().includes(q.toLowerCase())).sort((a, b) => b.date.localeCompare(a.date));
+  const t = yearTotals(y);
+  return `<h2>Recettes & dépenses</h2><div class="row"><select id="ty" style="width:auto">${yearsList().map(v => `<option ${v === y ? 'selected' : ''}>${v}</option>`).join('')}</select>
+  <select id="tt" style="width:auto"><option value="">Tout</option><option value="in" ${txType === 'in' ? 'selected' : ''}>Recettes</option><option value="out" ${txType === 'out' ? 'selected' : ''}>Dépenses</option></select><input class="grow" id="q" placeholder="Rechercher…" value="${esc(q)}">
+  <button class="b" data-a="addtx" data-t="in">+ Recette</button><button class="b d" data-a="addtx" data-t="out">+ Dépense</button></div>
+  <p class="muted">Les cotisations encaissées sont comptées automatiquement en recettes (${gnf(t.contrib)} en ${y}). Ici : autres recettes ${gnf(t.income)} · dépenses ${gnf(t.expense)}.</p>
+  <div class="card tw"><table><tr><th>Date</th><th>Type</th><th>Catégorie</th><th>Libellé</th><th class="n">Montant</th><th></th></tr>
+  ${list.map(x => `<tr><td>${fdate(x.date)}</td><td><span class="tag ${x.type === 'in' ? 't-ok' : 't-bad'}">${x.type === 'in' ? 'Recette' : 'Dépense'}</span></td><td>${esc(x.category)}</td><td>${esc(x.label)}</td><td class="n ${x.type === 'in' ? 'pos' : 'neg'}">${x.type === 'in' ? '+' : '−'}${gnf(x.amount)}</td><td class="right"><button class="b d sm" data-a="deltx" data-id="${x.id}">Supprimer</button></td></tr>`).join('') || '<tr><td colspan="6" class="muted">Aucune opération.</td></tr>'}</table></div>`;
+}
+function txForm(type) {
+  const cats = type === 'in' ? CAT_IN : CAT_OUT;
+  modal(`<h3 style="margin-top:0">${type === 'in' ? 'Nouvelle recette' : 'Nouvelle dépense'}</h3><label>Date</label><input type="date" name="date" required value="${today()}" max="${today()}">
+  <label>Catégorie</label><input name="cat" list="cats" required value="${cats[0]}"><datalist id="cats">${cats.map(c => `<option>${c}</option>`).join('')}</datalist>
+  <label>Libellé / justification</label><input name="label" required><label>Montant (GNF)</label><input name="amount" inputmode="numeric" required>${closeBtns()}`, fd => {
+    const a = amt(fd.get('amount')), date = fd.get('date'); if (a <= 0 || lockMsg(date)) return false;
+    if (type === 'out' && a > balanceNow() && !confirm('Cette dépense dépasse le solde de la caisse (' + gnf(balanceNow()) + '). Continuer ?')) return false;
+    S.txs.push({ id: uid(), type, date, category: fd.get('cat').trim(), label: fd.get('label').trim(), amount: a }); log((type === 'in' ? 'Recette ' : 'Dépense ') + gnf(a) + ' : ' + fd.get('label')); return save();
+  });
+}
+
+/* --- Dettes --- */
+function debt() {
+  const cm = curYM(), rows = S.members.map(m => ({ m, d: memberDebt(m), months: dueMonths(m).filter(mo => paidFor(m.id, mo) < FEE) })).filter(r => r.d > 0).sort((a, b) => b.d - a.d);
+  return `<h2>Dettes de cotisation</h2><div class="card kpi"><div class="l">Total dû à la caisse au ${fdate(today())}</div><div class="v neg">${gnf(rows.reduce((s, r) => s + r.d, 0))}</div></div>
+  <div class="card tw"><table><tr><th>Membre</th><th>Mois impayés</th><th class="n">Dette</th><th></th></tr>${rows.map(r => `<tr><td>${esc(r.m.name)}</td><td class="muted" style="white-space:normal">${r.months.length} : ${r.months.slice(0, 4).map(mlabel).join(', ')}${r.months.length > 4 ? '…' : ''}</td><td class="n neg">${gnf(r.d)}</td><td class="right"><button class="b sm" data-a="pay" data-id="${r.m.id}" data-mo="${r.months[0]}">Encaisser</button></td></tr>`).join('') || '<tr><td colspan="4" class="pos">Tout le monde est à jour 🎉</td></tr>'}</table></div>`;
+}
+
+/* --- Rapports --- */
+function reportData(y) {
+  const t = yearTotals(y), months = monthsRange(y + '-01', y + '-12').map(mo => {
+    const c = S.payments.filter(p => ym(p.date) === mo).reduce((s, p) => s + p.amount, 0), i = S.txs.filter(x => x.type === 'in' && ym(x.date) === mo).reduce((s, x) => s + x.amount, 0), o = S.txs.filter(x => x.type === 'out' && ym(x.date) === mo).reduce((s, x) => s + x.amount, 0);
+    return { mo, c, i, o };
+  });
+  let run = t.opening; months.forEach(m => { run += m.c + m.i - m.o; m.bal = run; });
+  const cats = {}; S.txs.filter(x => yr(x.date) === y).forEach(x => { const k = (x.type === 'in' ? 'Recette · ' : 'Dépense · ') + x.category; cats[k] = (cats[k] || 0) + x.amount; });
+  return { t, months, cats };
+}
+function rep() {
+  const y = repYear, { t, months, cats } = reportData(y), arch = S.closed[y];
+  return `<h2>Rapport financier</h2><div class="row noprint"><select id="ry" style="width:auto">${yearsList().map(v => `<option ${v === y ? 'selected' : ''}>${v}</option>`).join('')}</select><button class="b" onclick="print()">🖨 Imprimer / PDF</button><button class="b s" data-a="csv">Exporter Excel (CSV)</button></div>
+  <div class="card"><h3 style="margin-top:0">${APP} — Exercice ${y} ${arch ? '<span class="tag t-off">clôturé</span>' : '<span class="tag t-mid">en cours</span>'}</h3>
+  <table><tr><td>Solde d’ouverture</td><td class="n">${gnf(t.opening)}</td></tr><tr><td>+ Cotisations</td><td class="n">${gnf(t.contrib)}</td></tr><tr><td>+ Autres recettes</td><td class="n">${gnf(t.income)}</td></tr><tr><td>− Dépenses</td><td class="n">${gnf(t.expense)}</td></tr><tr><th>Solde de clôture</th><th class="n ${t.closing < 0 ? 'neg' : 'pos'}">${gnf(t.closing)}</th></tr></table>
+  <h3>Détail mensuel</h3><div class="tw"><table><tr><th>Mois</th><th class="n">Cotisations</th><th class="n">Autres recettes</th><th class="n">Dépenses</th><th class="n">Solde fin de mois</th></tr>${months.map(m => `<tr><td>${mlabel(m.mo)}</td><td class="n">${gnf(m.c)}</td><td class="n">${gnf(m.i)}</td><td class="n">${gnf(m.o)}</td><td class="n">${gnf(m.bal)}</td></tr>`).join('')}</table></div>
+  <h3>Par catégorie</h3><table>${Object.entries(cats).map(([k, v]) => `<tr><td>${esc(k)}</td><td class="n">${gnf(v)}</td></tr>`).join('') || '<tr><td class="muted">Aucune opération.</td></tr>'}</table>
+  <p class="muted">Édité le ${fdate(today())}</p></div>`;
+}
+function exportCSV() {
+  const y = repYear, { t, months } = reportData(y);
+  const rows = [['Mois', 'Cotisations', 'Autres recettes', 'Dépenses', 'Solde fin de mois'], ...months.map(m => [mlabel(m.mo), m.c, m.i, m.o, m.bal]), [], ['Solde ouverture', t.opening], ['Solde clôture', t.closing], [], ['Date', 'Type', 'Catégorie', 'Libellé', 'Montant'], ...S.txs.filter(x => yr(x.date) === y).map(x => [x.date, x.type === 'in' ? 'Recette' : 'Dépense', x.category, x.label, x.amount])];
+  download('caisse-famille-best-' + y + '.csv', '﻿' + rows.map(r => r.map(csvCell).join(';')).join('\n'), 'text/csv');
+}
+function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+
+/* --- Archives --- */
+function arch() {
+  const ys = Object.keys(S.closed).sort().reverse();
+  return `<h2>Archives annuelles</h2><p class="muted">Chaque année, l’exercice terminé est clôturé et archivé automatiquement au premier lancement de l’année suivante. Son solde de clôture devient le solde d’ouverture de la nouvelle année, et les cotisations impayées restent dues. L’application continue sans limite de date.</p>
+  ${ys.map(y => { const a = S.closed[y]; return `<div class="card"><div class="row"><h3 class="grow" style="margin:0">Exercice ${y}</h3><span class="muted">archivé le ${fdate(a.closedAt.slice(0, 10))}</span><button class="b s sm" data-a="openrep" data-y="${y}">Ouvrir le rapport</button></div>
+  <div class="grid"><div><span class="muted">Ouverture</span><br><b>${gnf(a.opening)}</b></div><div><span class="muted">Cotisations</span><br><b>${gnf(a.contrib)}</b></div><div><span class="muted">Autres recettes</span><br><b>${gnf(a.income)}</b></div><div><span class="muted">Dépenses</span><br><b>${gnf(a.expense)}</b></div><div><span class="muted">Clôture</span><br><b>${gnf(a.closing)}</b></div><div><span class="muted">Dettes au 31/12</span><br><b class="neg">${gnf(a.debts)}</b></div></div></div>`; }).join('') || '<div class="card muted">Aucun exercice archivé pour l’instant. Le premier (2026) sera archivé en janvier 2027.</div>'}`;
+}
+
+/* --- Paramètres --- */
+function set() {
+  return `<h2>Paramètres & sécurité</h2>
+  <div class="card"><h3 style="margin-top:0">Sauvegarde</h3><p class="muted">Les données sont chiffrées et stockées dans ce navigateur uniquement. Faites une sauvegarde régulièrement (chaque mois) et conservez-la ailleurs (clé USB, e-mail, Drive). La sauvegarde est chiffrée avec votre mot de passe.</p>
+  <div class="row"><button class="b" data-a="backup">Télécharger une sauvegarde</button><button class="b s" data-a="restore">Restaurer une sauvegarde</button></div></div>
+  <div class="card"><h3 style="margin-top:0">Mot de passe</h3><button class="b s" data-a="chpw">Changer le mot de passe</button> <span class="muted">· verrouillage automatique après 5 min d’inactivité</span></div>
+  <div class="card"><h3 style="margin-top:0">Journal d’activité</h3><div class="tw" style="max-height:300px;overflow:auto"><table>${S.audit.slice(0, 100).map(a => `<tr><td class="muted">${new Date(a.t).toLocaleString('fr-FR')}</td><td style="white-space:normal">${esc(a.msg)}</td></tr>`).join('')}</table></div></div>`;
+}
+function importBackup() {
+  const i = document.createElement('input'); i.type = 'file'; i.accept = '.json,.fbcaisse'; i.onchange = async () => {
+    const txt = await i.files[0].text(), pw = prompt('Mot de passe de cette sauvegarde :'); if (!pw) return;
+    try { const r = await openBlob(txt, pw); if (S && !confirm('Remplacer toutes les données actuelles par cette sauvegarde ?')) return; S = r.state; cryptoKey = r.key; cryptoSalt = r.salt; await save(); start(); }
+    catch { toast('Sauvegarde illisible ou mot de passe incorrect.'); }
+  }; i.click();
+}
+function changePw() {
+  modal(`<h3 style="margin-top:0">Changer le mot de passe</h3><label>Nouveau mot de passe</label><input type="password" name="a" minlength="6" required><label>Confirmer</label><input type="password" name="b" minlength="6" required>${closeBtns()}`, async fd => {
+    if (fd.get('a') !== fd.get('b')) { toast('Les mots de passe ne correspondent pas.'); return false; }
+    cryptoSalt = crypto.getRandomValues(new Uint8Array(16)); cryptoKey = await deriveKey(fd.get('a'), cryptoSalt); log('Mot de passe modifié'); await save(); toast('Mot de passe modifié. Refaites une sauvegarde.');
+  });
+}
+
+/* --- Liaison des événements --- */
+function bind() {
+  const qi = $('#q'); if (qi) qi.oninput = () => { q = qi.value; const p = qi.selectionStart; shell(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); };
+  const sel = (id, f) => { const e = $(id); if (e) e.onchange = () => { f(e.value); shell(); }; };
+  sel('#cy', v => cotYear = +v); sel('#ty', v => txYear = +v); sel('#tt', v => txType = v); sel('#ry', v => repYear = +v);
+  document.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+    const a = b.dataset.a, id = b.dataset.id;
+    if (a === 'addm') memberForm(); else if (a === 'editm') memberForm(S.members.find(m => m.id === id));
+    else if (a === 'pay') payForm(id, b.dataset.mo); else if (a === 'addtx') txForm(b.dataset.t);
+    else if (a === 'deltx') { const x = S.txs.find(t => t.id === id); if (!lockMsg(x.date) && confirm('Supprimer cette opération ?')) { S.txs = S.txs.filter(t => t !== x); log('Opération supprimée : ' + x.label + ' ' + gnf(x.amount)); save(); shell(); } }
+    else if (a === 'csv') exportCSV(); else if (a === 'openrep') { repYear = +b.dataset.y; view = 'rep'; shell(); }
+    else if (a === 'backup') { download('sauvegarde-famille-best-' + today() + '.fbcaisse', localStorage.getItem(KEY), 'application/json'); log('Sauvegarde téléchargée'); save(); }
+    else if (a === 'restore') importBackup(); else if (a === 'chpw') changePw();
+  });
+}
+
+showLock();
+</script>
+</body>
+</html>

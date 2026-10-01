@@ -46,3 +46,15 @@ Configuration sur Cloudflare (Workers → oussama → Settings → Variables and
 - `MOT_DE_PASSE` : le mot de passe demandé sur la page pour éviter que d'autres utilisent votre clé
 
 En local : `npm install`, un fichier `.dev.vars` avec ces deux lignes, puis `npx wrangler dev`.
+
+## LA FAMILLE BEST — Gestion de caisse
+
+Application de gestion financière de la communauté, dans `public/caisse/index.html` (page `/caisse/`). Franc guinéen (GNF), cotisation de 10 000 GNF par membre et par mois, à partir du 1er octobre 2026, sans date de fin.
+
+- Membres, cotisations mois par mois (paiements partiels possibles), recettes, dépenses, solde de la caisse
+- Dettes de cotisation calculées automatiquement (les impayés se reportent d'année en année)
+- Archivage annuel automatique : l'exercice terminé est clôturé et figé au premier lancement de l'année suivante, son solde devient le solde d'ouverture
+- Rapports annuels et mensuels, impression / PDF, export Excel (CSV)
+- Sécurité : mot de passe, données chiffrées (AES-GCM) dans le navigateur, verrouillage après 5 min, journal d'activité, sauvegarde chiffrée téléchargeable
+
+Les données restent dans le navigateur de l'appareil : faire une sauvegarde chaque mois. Mot de passe perdu = données irrécupérables (sauf sauvegarde).
