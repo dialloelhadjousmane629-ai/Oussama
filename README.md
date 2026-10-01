@@ -64,7 +64,7 @@ Logiciel permanent de gestion financière de la communauté (page `/caisse/`). F
 - Membres (numéro unique FB-0001…, désactivation sans perte d'historique), cotisations (PAYÉ / NON PAYÉ / PARTIEL / EN AVANCE), dépenses, recettes, dettes
 - Journal de caisse : référence unique, date et heure, auteur, solde après opération. Rien n'est effacé : une opération se corrige par une **annulation motivée** (reste visible, barrée) et tout est tracé dans l'historique d'audit.
 - Rapports : mensuel, trimestriel, annuel, individuel, membres à jour / en retard, dépenses, journal, bilan général ; export PDF (impression) et Excel
-- Profils : Administrateur, Trésorier, Consultation (lecture seule, sans téléphones). Mots de passe hachés (PBKDF2), session signée de 12 h, déconnexion après 15 min d'inactivité, verrouillage après 5 échecs.
+- Consultation publique : toute personne ayant le lien voit les comptes en lecture seule, sans connexion et sans numéros de téléphone ; seuls les comptes connectés (Administrateur, Trésorier) peuvent écrire. Profils : Administrateur, Trésorier, Consultation (compte nommé en lecture seule). Mots de passe hachés (PBKDF2), session signée de 12 h, déconnexion après 15 min d'inactivité, verrouillage après 5 échecs.
 - Sauvegarde : instantané interne hebdomadaire automatique (cron), téléchargement / restauration JSON (un instantané de sécurité est pris avant toute restauration), plus l'historique Time Travel de D1 (30 jours)
 
 **Mise en service** : `npm install`, puis `npx wrangler deploy` (la base D1 est créée automatiquement). Au premier accès à `/caisse/`, créez le compte administrateur. En local : `npx wrangler dev`.
