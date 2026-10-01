@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { handle as caisse, scheduledBackup } from "./caisse.js";
 
 const MODELE = "claude-opus-5-5";
 const MAX_REPRISES = 6;
@@ -110,10 +111,14 @@ async function discussion(request, env) {
 export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
+    if (pathname.startsWith("/api/c/")) return caisse(request, env);
     if (pathname === "/api/chat") {
       if (request.method !== "POST") return json({ erreur: "Méthode non autorisée." }, 405);
       return discussion(request, env);
     }
     return env.ASSETS ? env.ASSETS.fetch(request) : new Response("Introuvable", { status: 404 });
+  },
+  async scheduled(_event, env, ctx) {
+    ctx.waitUntil(scheduledBackup(env));
   },
 };

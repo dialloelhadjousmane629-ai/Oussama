@@ -49,12 +49,22 @@ En local : `npm install`, un fichier `.dev.vars` avec ces deux lignes, puis `npx
 
 ## LA FAMILLE BEST — Gestion de caisse
 
-Application de gestion financière de la communauté, dans `public/caisse/index.html` (page `/caisse/`). Franc guinéen (GNF), cotisation de 10 000 GNF par membre et par mois, à partir du 1er octobre 2026, sans date de fin.
+Logiciel permanent de gestion financière de la communauté (page `/caisse/`). Franc guinéen (GNF), cotisation de 10 000 GNF par membre et par mois, depuis le 1er octobre 2026, sans date de fin.
 
-- Membres, cotisations mois par mois (paiements partiels possibles), recettes, dépenses, solde de la caisse
-- Dettes de cotisation calculées automatiquement (les impayés se reportent d'année en année)
-- Archivage annuel automatique : l'exercice terminé est clôturé et figé au premier lancement de l'année suivante, son solde devient le solde d'ouverture
-- Rapports annuels et mensuels, impression / PDF, export Excel (CSV)
-- Sécurité : mot de passe, données chiffrées (AES-GCM) dans le navigateur, verrouillage après 5 min, journal d'activité, sauvegarde chiffrée téléchargeable
+**Architecture**
 
-Les données restent dans le navigateur de l'appareil : faire une sauvegarde chaque mois. Mot de passe perdu = données irrécupérables (sauf sauvegarde).
+- `public/caisse/index.html` : interface (bleu nuit / blanc / doré, responsive téléphone-tablette-ordinateur)
+- `src/caisse.js` : API (`/api/c/*`) sur Cloudflare Workers, base **D1** (SQLite) persistante. Les tables sont créées automatiquement au premier appel.
+- Tables : `users`, `members`, `operations` (cotisations, recettes, dépenses), `audit`, `closings` (archives annuelles), `counters`, `settings`, `backups`
+
+**Fonctions**
+
+- Années : 2026 (oct.–déc.) puis 12 mois par année, sans limite. Tableau de bord, statistiques et rapports propres à chaque année ; « Historique des années » conserve tout.
+- Clôture annuelle automatique : l'exercice terminé est figé (immuable). Son solde de clôture est reporté comme solde d'ouverture, sans être recompté en recette.
+- Membres (numéro unique FB-0001…, désactivation sans perte d'historique), cotisations (PAYÉ / NON PAYÉ / PARTIEL / EN AVANCE), dépenses, recettes, dettes
+- Journal de caisse : référence unique, date et heure, auteur, solde après opération. Rien n'est effacé : une opération se corrige par une **annulation motivée** (reste visible, barrée) et tout est tracé dans l'historique d'audit.
+- Rapports : mensuel, trimestriel, annuel, individuel, membres à jour / en retard, dépenses, journal, bilan général ; export PDF (impression) et Excel
+- Profils : Administrateur, Trésorier, Consultation (lecture seule, sans téléphones). Mots de passe hachés (PBKDF2), session signée de 12 h, déconnexion après 15 min d'inactivité, verrouillage après 5 échecs.
+- Sauvegarde : instantané interne hebdomadaire automatique (cron), téléchargement / restauration JSON (un instantané de sécurité est pris avant toute restauration), plus l'historique Time Travel de D1 (30 jours)
+
+**Mise en service** : `npm install`, puis `npx wrangler deploy` (la base D1 est créée automatiquement). Au premier accès à `/caisse/`, créez le compte administrateur. En local : `npx wrangler dev`.
