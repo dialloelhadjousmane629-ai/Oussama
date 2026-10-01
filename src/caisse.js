@@ -184,16 +184,18 @@ export async function handle(request, env) {
       return json({ token: await makeToken(db, u), user: pubUser(u) });
     }
 
-    const me = await authUser(db, request);
-
+    // Consultation publique : sans connexion, lecture seule (sans téléphones). Toute écriture exige une connexion.
     if (path === "state" && method === "GET") {
+      const me = request.headers.get("authorization") ? await authUser(db, request) : { id: 0, username: "", name: "Visiteur", role: "public", active: 1 };
       await ensureClosings(db);
       const members = (await db.prepare(`SELECT * FROM members ORDER BY number`).all()).results;
       const ops = (await db.prepare(`SELECT * FROM operations ORDER BY id`).all()).results;
       const closings = (await db.prepare(`SELECT * FROM closings ORDER BY year`).all()).results.map((c) => ({ ...c, snapshot: JSON.parse(c.snapshot) }));
-      if (me.role === "consultation") members.forEach((m) => (m.phone = ""));
+      if (me.role !== "admin" && me.role !== "tresorier") members.forEach((m) => (m.phone = ""));
       return json({ user: pubUser(me), fee: FEE, start: START, today: todayStr(), methods: METHODS, members, ops, closings });
     }
+
+    const me = await authUser(db, request);
 
     if (path === "password" && method === "POST") {
       if (!safeEq(await hashPw(str(body.current, 200), unb64(me.salt)), me.hash)) bad("Mot de passe actuel incorrect.", 403);

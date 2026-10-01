@@ -75,7 +75,7 @@ const mlabel = m => MOIS[+m.slice(5) - 1] + ' ' + m.slice(0, 4);
 const fdate = d => d ? String(d).slice(0, 10).split('-').reverse().join('/') : '';
 const fts = t => { const d = new Date(t); return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); };
 function monthsRange(a, b) { const out = []; let [y, m] = a.split('-').map(Number); const [y2, m2] = b.split('-').map(Number); while (y < y2 || (y === y2 && m <= m2)) { out.push(y + '-' + String(m).padStart(2, '0')); if (++m > 12) { m = 1; y++; } } return out; }
-const ROLE = { admin: 'Administrateur', tresorier: 'Trésorier', consultation: 'Consultation' };
+const ROLE = { public: 'Visiteur (lecture seule)', admin: 'Administrateur', tresorier: 'Trésorier', consultation: 'Consultation' };
 
 /* ====== API ====== */
 let token = sessionStorage.getItem('fbtok') || '', S = null, idle;
@@ -88,7 +88,7 @@ async function api(path, method = 'GET', body) {
 }
 function resetIdle() { clearTimeout(idle); if (token) idle = setTimeout(() => logout('Déconnexion automatique après 15 minutes d’inactivité.'), 15 * 60 * 1000); }
 ['click', 'keydown', 'touchstart'].forEach(e => addEventListener(e, resetIdle, { passive: true }));
-function logout(msg = '') { token = ''; S = null; sessionStorage.removeItem('fbtok'); showAuth(msg); }
+function logout(msg = '') { token = ''; sessionStorage.removeItem('fbtok'); clearTimeout(idle); init().then(() => msg && alert(msg)); }
 
 /* ====== Calculs ====== */
 const cy = () => yr(S.today), cm = () => ym(S.today);
@@ -117,7 +117,7 @@ const STAG = { 'PAYÉ': 't-ok', 'NON PAYÉ': 't-bad', 'PARTIEL': 't-mid', 'EN AV
 const stag = s => s ? `<span class="tag ${STAG[s]}">${s}</span>` : '<span class="muted">—</span>';
 const mname = m => m ? `${m.first_name} ${m.last_name}` : '';
 const memberById = id => S.members.find(m => m.id === id);
-const canWrite = () => S.user.role !== 'consultation';
+const canWrite = () => S.user.role === 'admin' || S.user.role === 'tresorier';
 const isAdmin = () => S.user.role === 'admin';
 function journal() { let run = 0; return S.ops.map(o => { if (!o.void_ts) run += o.kind === 'depense' ? -o.amount : o.amount; return { ...o, after: run }; }); }
 function yearStats(y) {
@@ -146,7 +146,8 @@ async function showAuth(msg = '') {
   $('#app').innerHTML = `<div class="auth"><div class="card"><div style="text-align:center"><div class="logo" style="margin:0 auto 8px;width:60px;height:60px;font-size:28px">FB</div><h2 style="margin:0;letter-spacing:1.5px">${NAME}</h2><p class="muted" style="margin:2px 0 10px">Gestion de caisse</p></div>
   <form id="af">${setup ? '<p class="muted">Première installation : créez le compte <b>administrateur</b>.</p><label>Nom complet</label><input id="nm" required>' : ''}
   <label>Identifiant</label><input id="us" autocomplete="username" required><label>Mot de passe${setup ? ' (8 caractères minimum)' : ''}</label><input id="pw" type="password" autocomplete="${setup ? 'new-password' : 'current-password'}" required minlength="${setup ? 8 : 1}">
-  <p class="merr" id="aerr">${esc(msg)}</p><button class="b g" style="width:100%">${setup ? 'Créer la caisse' : 'Se connecter'}</button></form></div></div>`;
+  <p class="merr" id="aerr">${esc(msg)}</p><button class="b g" style="width:100%">${setup ? 'Créer la caisse' : 'Se connecter'}</button></form>${setup ? '' : '<p style="text-align:center"><a href="#" id="back">← Retour à la consultation</a></p>'}</div></div>`;
+  const bk = $('#back'); if (bk) bk.onclick = e => { e.preventDefault(); init(); };
   $('#af').onsubmit = async e => {
     e.preventDefault(); const err = t => $('#aerr').textContent = t;
     try {
@@ -164,7 +165,7 @@ let view = 'dash', Y = 2026, cotMode = 'mois', cotMonth = '', q = '', jmode = 'j
 const TABS = () => [['dash', '📊 Tableau de bord'], ['mem', '👥 Membres'], ['cot', '💳 Cotisations'], ['tx', '🧾 Dépenses & recettes'], ['jour', '📒 Journal'], ['rep', '📑 Rapports'], ['years', '🗂 Historique des années'], ...(isAdmin() ? [['adm', '⚙️ Administration']] : [])];
 function shell() {
   const t = S.user;
-  $('#app').innerHTML = `<header><div class="logo">FB</div><h1>${NAME}<small>Gestion de caisse · Franc guinéen (GNF) · cotisation ${gnf(S.fee)} / mois</small></h1><div class="who">${esc(t.name)}<br><span class="tag t-off">${ROLE[t.role]}</span> <button class="b s sm" data-a="acct">Mon compte</button> <button class="b s sm" data-a="logout">Quitter</button></div></header>
+  $('#app').innerHTML = `<header><div class="logo">FB</div><h1>${NAME}<small>Gestion de caisse · Franc guinéen (GNF) · cotisation ${gnf(S.fee)} / mois</small></h1><div class="who">${t.role === 'public' ? `<span class="tag t-off">${ROLE.public}</span> <button class="b g sm" data-a="login">Connexion (administrateurs)</button>` : `${esc(t.name)}<br><span class="tag t-off">${ROLE[t.role]}</span> <button class="b s sm" data-a="acct">Mon compte</button> <button class="b s sm" data-a="logout">Quitter</button>`}</div></header>
   <nav>${TABS().map(([k, l]) => `<button data-v="${k}" class="${k === view ? 'on' : ''}">${l}</button>`).join('')}</nav><main>${({ dash, mem, cot, tx, jour, rep: repView, years: yearsView, adm })[view]()}</main>`;
   document.querySelectorAll('nav button').forEach(b => b.onclick = () => { view = b.dataset.v; q = ''; if (view === 'adm') loadAdmin(); else shell(); window.scrollTo(0, 0); });
   bind();
@@ -227,7 +228,7 @@ function cot() {
   if (cotMode === 'grille') {
     const months = monthsRange(Y + '-' + (Y === 2026 ? '10' : '01'), Y + '-12'), list = S.members.filter(m => (m.active || dueMonths(m).length) && mname(m).toLowerCase().includes(q.toLowerCase()));
     return head + `<div class="row">${yearSel()}<input class="grow" id="q" placeholder="Rechercher un membre…" value="${esc(q)}"><span class="muted"><span class="tag t-ok">payé</span> <span class="tag t-mid">partiel</span> <span class="tag t-bad">non payé</span> <span class="tag t-info">en avance</span></span></div>
-    <div class="card tw"><table><tr><th>Membre</th>${months.map(m => `<th class="n">${MOIS[+m.slice(5) - 1].slice(0, 3)}</th>`).join('')}</tr>${list.map(m => `<tr><td>${esc(mname(m))}</td>${months.map(mo => { const s = statusOf(m, mo), cls = { 'PAYÉ': 'c-ok', 'PARTIEL': 'c-mid', 'NON PAYÉ': 'c-bad', 'EN AVANCE': 'c-adv' }[s] || 'c-na', p = paidFor(m.id, mo), lbl = s === 'PAYÉ' ? '✓' : s === 'PARTIEL' ? Math.round(p / 1000) + 'k' : s === 'EN AVANCE' ? '↑' : s ? '—' : ''; return `<td><button class="cell ${cls}" ${s || !canWrite() ? '' : ''} ${(!s && !(canWrite() && mo >= firstMonth(m))) ? 'disabled' : `data-a="pay" data-id="${m.id}" data-mo="${mo}"`}>${lbl}</button></td>`; }).join('')}</tr>`).join('') || '<tr><td>Aucun membre.</td></tr>'}</table></div>`;
+    <div class="card tw"><table><tr><th>Membre</th>${months.map(m => `<th class="n">${MOIS[+m.slice(5) - 1].slice(0, 3)}</th>`).join('')}</tr>${list.map(m => `<tr><td>${esc(mname(m))}</td>${months.map(mo => { const s = statusOf(m, mo), cls = { 'PAYÉ': 'c-ok', 'PARTIEL': 'c-mid', 'NON PAYÉ': 'c-bad', 'EN AVANCE': 'c-adv' }[s] || 'c-na', p = paidFor(m.id, mo), lbl = s === 'PAYÉ' ? '✓' : s === 'PARTIEL' ? Math.round(p / 1000) + 'k' : s === 'EN AVANCE' ? '↑' : s ? '—' : ''; return `<td><button class="cell ${cls}" ${s || !canWrite() ? '' : ''} ${(!canWrite() || (!s && mo < firstMonth(m))) ? 'disabled' : `data-a="pay" data-id="${m.id}" data-mo="${mo}"`}>${lbl}</button></td>`; }).join('')}</tr>`).join('') || '<tr><td>Aucun membre.</td></tr>'}</table></div>`;
   }
   const rows = monthRows(cotMonth), tot = monthTotals(rows);
   return head + `<div class="row"><input type="month" id="cmonth" min="${S.start}" value="${cotMonth}"><input class="grow" id="q" placeholder="Rechercher un membre…" value="${esc(q)}">${canWrite() ? '<button class="b g" data-a="pay">+ Encaisser une cotisation</button>' : ''}</div>
@@ -281,8 +282,8 @@ function voidForm(o) {
 /* ====== Journal & audit ====== */
 let auditRows = null;
 function jour() {
-  const tabs = `<div class="tabs"><button class="${jmode === 'j' ? 'on' : ''}" data-jm="j">Journal de caisse</button>${S.user.role !== 'consultation' ? `<button class="${jmode === 'a' ? 'on' : ''}" data-jm="a">Historique d’audit</button>` : ''}</div>`;
-  if (jmode === 'a' && S.user.role !== 'consultation') {
+  const tabs = `<div class="tabs"><button class="${jmode === 'j' ? 'on' : ''}" data-jm="j">Journal de caisse</button>${canWrite() ? `<button class="${jmode === 'a' ? 'on' : ''}" data-jm="a">Historique d’audit</button>` : ''}</div>`;
+  if (jmode === 'a' && canWrite()) {
     if (!auditRows) { api('audit').then(r => { auditRows = r.audit; shell(); }).catch(e => { auditRows = []; alert(e.message); shell(); }); return `<h2>Journal</h2>${tabs}<p>Chargement…</p>`; }
     return `<h2>Historique d’audit</h2>${tabs}<p class="muted">Toute action (saisie, annulation, modification, connexion, sauvegarde) est tracée ici et ne peut pas être effacée. 500 dernières lignes.</p><div class="card tw"><table><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Réf.</th><th>Détail</th></tr>${auditRows.map(a => `<tr><td>${fts(a.ts)}</td><td>${esc(a.user_name)}</td><td><span class="tag t-off">${esc(a.action)}</span></td><td>${esc(a.ref)}</td><td style="white-space:normal">${esc(a.detail)}</td></tr>`).join('')}</table></div>`;
   }
@@ -402,7 +403,7 @@ function bind() {
   document.querySelectorAll('[data-a]').forEach(b => b.onclick = async e => {
     e.preventDefault(); const a = b.dataset.a, id = +b.dataset.id;
     try {
-      if (a === 'logout') { try { await api('status'); } catch {} logout(); }
+      if (a === 'logout') logout(); else if (a === 'login') showAuth();
       else if (a === 'acct') acctForm(); else if (a === 'addm') memberForm(); else if (a === 'editm') memberForm(memberById(id)); else if (a === 'mdet') memberDetail(memberById(id));
       else if (a === 'pay') { $('#dlg').open && $('#dlg').close(); payForm(id || undefined, b.dataset.mo); }
       else if (a === 'addtx') txForm(b.dataset.k); else if (a === 'void') voidForm(S.ops.find(o => o.id === id)); else if (a === 'more') { jmax += 300; shell(); }
@@ -418,7 +419,11 @@ function bind() {
   });
 }
 
-if (token) boot().catch(() => logout()); else showAuth();
+async function init() {
+  try { if ((await api('status')).setup) return showAuth(); } catch (e) { return showAuth(e.message); }
+  try { await boot(); } catch { token = ''; sessionStorage.removeItem('fbtok'); await boot().catch(e => showAuth(e.message)); }
+}
+init();
 </script>
 </body>
 </html>
