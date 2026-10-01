@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0b1f3a">
+<title>LA FAMILLE BEST — Gestion de caisse</title>
+<style>
+:root{--navy:#0b1f3a;--navy2:#13335c;--gold:#c9a227;--gold2:#fbf3d6;--bg:#f3f5f9;--card:#fff;--ink:#14213d;--mut:#5c6b84;--line:#e1e6ef;--ok:#17743f;--ok2:#e2f5e9;--bad:#b3261e;--bad2:#fdeceb;--mid:#a05a00;--mid2:#fff1d6;--info:#1c5cb8;--info2:#e5eefc}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(120deg,var(--navy),var(--navy2));color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:3px solid var(--gold)}
+.logo{width:42px;height:42px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-weight:800;font-size:20px;flex:none}
+header h1{margin:0;font-size:19px;letter-spacing:1.5px;color:var(--gold);flex:1;min-width:180px}
+header h1 small{display:block;color:#cdd7e8;font-size:12px;letter-spacing:.3px;font-weight:400}
+.who{font-size:13px;color:#dfe7f5;text-align:right}
+nav{display:flex;gap:2px;overflow-x:auto;padding:6px 10px;background:var(--navy);position:sticky;top:0;z-index:5}
+nav button{white-space:nowrap;border:0;background:none;color:#c3cfe4;padding:9px 13px;border-radius:8px;font:inherit;cursor:pointer}
+nav button.on{background:var(--gold);color:var(--navy);font-weight:700}
+main{max-width:1180px;margin:0 auto;padding:16px}
+h2{margin:0 0 12px;font-size:21px;color:var(--navy)}h3{margin:18px 0 8px;font-size:16px;color:var(--navy)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px #0b1f3a0d}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-bottom:14px}
+.grid .card{margin:0}
+.kpi{display:flex;gap:12px;align-items:center}.kpi .ic{font-size:26px;width:46px;height:46px;border-radius:12px;background:var(--gold2);display:grid;place-items:center;flex:none}
+.kpi .l{color:var(--mut);font-size:13px}.kpi .v{font-size:21px;font-weight:700;color:var(--navy)}
+.pos{color:var(--ok)}.neg{color:var(--bad)}.muted{color:var(--mut)}.right{text-align:right}
+button.b,a.b{border:1px solid var(--navy);background:var(--navy);color:#fff;padding:8px 14px;border-radius:9px;font:inherit;cursor:pointer;text-decoration:none;display:inline-block}
+button.b.g{background:var(--gold);border-color:var(--gold);color:var(--navy);font-weight:700}
+button.b.s{background:#fff;color:var(--navy)}button.b.d{background:var(--bad);border-color:var(--bad)}
+button.sm{padding:3px 9px;font-size:13px}button:disabled{opacity:.5;cursor:default}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid #cdd5e3;border-radius:9px;font:inherit;background:#fff;color:var(--ink)}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 3px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.row>*{flex:0 0 auto}.row .grow{flex:1;min-width:150px}.row select,.row input[type=month]{width:auto}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.4px;background:#f8f9fc}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.void td{color:#9aa5b8;text-decoration:line-through}tr.void td:last-child,tr.void td.keep{text-decoration:none}
+tfoot td{font-weight:700;background:#f8f9fc}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700}
+.t-ok{background:var(--ok2);color:var(--ok)}.t-bad{background:var(--bad2);color:var(--bad)}.t-mid{background:var(--mid2);color:var(--mid)}.t-info{background:var(--info2);color:var(--info)}.t-off{background:var(--line);color:var(--mut)}
+.cell{width:100%;min-width:34px;border:0;border-radius:6px;padding:6px 0;cursor:pointer;font-size:12px;font-weight:700}
+.c-ok{background:var(--ok2);color:var(--ok)}.c-bad{background:var(--bad2);color:var(--bad)}.c-mid{background:var(--mid2);color:var(--mid)}.c-adv{background:var(--info2);color:var(--info)}.c-na{background:var(--line);color:var(--mut);cursor:default}
+.bars{display:flex;align-items:flex-end;gap:6px;height:170px}
+.bars .m{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end;font-size:11px;color:var(--mut)}
+.bars .p{display:flex;gap:2px;align-items:flex-end;height:140px;width:100%;justify-content:center}
+.bars .p i{display:block;width:42%;border-radius:4px 4px 0 0;min-height:2px}
+.warn{background:var(--mid2);color:var(--mid);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.tabs button{border:1px solid var(--line);background:#fff;padding:6px 12px;border-radius:99px;cursor:pointer;font:inherit}.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+dialog{border:0;border-radius:16px;padding:18px;width:min(520px,94vw);max-height:92vh;background:#fff;color:var(--ink);box-shadow:0 12px 50px #0b1f3a66}
+dialog::backdrop{background:#0b1f3a99}
+.auth{max-width:400px;margin:9vh auto;padding:0 16px}.auth .card{padding:22px}
+.merr{color:var(--bad);min-height:1.3em;margin:8px 0 0}
+.printhead{display:none}
+@media print{header,nav,.noprint,button,.tabs{display:none!important}body{background:#fff}.card{border:0;box-shadow:none;padding:0}main{padding:0;max-width:none}.printhead{display:block;border-bottom:3px solid var(--gold);margin-bottom:10px}th{background:#eee!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<dialog id="dlg"></dialog>
+<script>
+'use strict';
+const NAME = 'LA FAMILLE BEST';
+const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const gnf = n => (n < 0 ? '-' : '') + String(Math.abs(Math.round(n))).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' GNF';
+const amt = s => parseInt(String(s).replace(/[^\d]/g, ''), 10) || 0;
+const yr = d => +String(d).slice(0, 4);
+const ym = d => String(d).slice(0, 7);
+const mlabel = m => MOIS[+m.slice(5) - 1] + ' ' + m.slice(0, 4);
+const fdate = d => d ? String(d).slice(0, 10).split('-').reverse().join('/') : '';
+const fts = t => { const d = new Date(t); return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); };
+function monthsRange(a, b) { const out = []; let [y, m] = a.split('-').map(Number); const [y2, m2] = b.split('-').map(Number); while (y < y2 || (y === y2 && m <= m2)) { out.push(y + '-' + String(m).padStart(2, '0')); if (++m > 12) { m = 1; y++; } } return out; }
+const ROLE = { admin: 'Administrateur', tresorier: 'Trésorier', consultation: 'Consultation' };
+
+/* ====== API ====== */
+let token = sessionStorage.getItem('fbtok') || '', S = null, idle;
+async function api(path, method = 'GET', body) {
+  const r = await fetch('/api/c/' + path, { method, headers: { 'content-type': 'application/json', ...(token ? { authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({ error: 'Réponse invalide du serveur.' }));
+  if (r.status === 401 && token && path !== 'login') { logout('Session expirée, reconnectez-vous.'); throw new Error(j.error); }
+  if (!r.ok) throw new Error(j.error || 'Erreur');
+  return j;
+}
+function resetIdle() { clearTimeout(idle); if (token) idle = setTimeout(() => logout('Déconnexion automatique après 15 minutes d’inactivité.'), 15 * 60 * 1000); }
+['click', 'keydown', 'touchstart'].forEach(e => addEventListener(e, resetIdle, { passive: true }));
+function logout(msg = '') { token = ''; S = null; sessionStorage.removeItem('fbtok'); showAuth(msg); }
+
+/* ====== Calculs ====== */
+const cy = () => yr(S.today), cm = () => ym(S.today);
+const live = () => S.ops.filter(o => !o.void_ts);
+const firstMonth = m => m.joined > S.start ? m.joined : S.start;
+function dueMonths(m, upTo = cm()) { const a = firstMonth(m); const end = m.left_month && m.left_month < upTo ? m.left_month : upTo; return a <= end ? monthsRange(a, end) : []; }
+const paidFor = (mid, month) => live().filter(o => o.kind === 'cotisation' && o.member_id === mid && o.month === month).reduce((s, o) => s + o.amount, 0);
+function memberDebt(m, upTo = cm(), maxYear = 9999) {
+  const L = live().filter(o => o.kind === 'cotisation' && o.member_id === m.id && yr(o.date) <= maxYear); let d = 0;
+  for (const mo of dueMonths(m, upTo)) d += Math.max(0, S.fee - L.filter(o => o.month === mo).reduce((s, o) => s + o.amount, 0));
+  return d;
+}
+const unpaidMonths = (m, upTo = cm()) => dueMonths(m, upTo).filter(mo => paidFor(m.id, mo) < S.fee);
+function yearTotals(y) {
+  let opening = 0, contrib = 0, income = 0, expense = 0;
+  for (const o of live()) { const oy = yr(o.date), s = o.kind === 'depense' ? -o.amount : o.amount; if (oy < y) opening += s; else if (oy === y) { if (o.kind === 'cotisation') contrib += o.amount; else if (o.kind === 'recette') income += o.amount; else expense += o.amount; } }
+  return { opening, contrib, income, expense, closing: opening + contrib + income - expense };
+}
+const balanceNow = () => yearTotals(cy()).closing;
+const cutOf = y => y >= cy() ? cm() : y + '-12';
+const maxYearOf = y => y >= cy() ? 9999 : y;
+const years = () => { const a = []; for (let y = 2026; y <= cy(); y++) a.push(y); return a; };
+const closedYear = y => S.closings.find(c => c.year === y);
+const statusOf = (m, mo) => { const p = paidFor(m.id, mo); if (mo > cm()) return p > 0 ? 'EN AVANCE' : null; if (!dueMonths(m, mo).includes(mo)) return p > 0 ? 'EN AVANCE' : null; return p >= S.fee ? 'PAYÉ' : p > 0 ? 'PARTIEL' : 'NON PAYÉ'; };
+const STAG = { 'PAYÉ': 't-ok', 'NON PAYÉ': 't-bad', 'PARTIEL': 't-mid', 'EN AVANCE': 't-info' };
+const stag = s => s ? `<span class="tag ${STAG[s]}">${s}</span>` : '<span class="muted">—</span>';
+const mname = m => m ? `${m.first_name} ${m.last_name}` : '';
+const memberById = id => S.members.find(m => m.id === id);
+const canWrite = () => S.user.role !== 'consultation';
+const isAdmin = () => S.user.role === 'admin';
+function journal() { let run = 0; return S.ops.map(o => { if (!o.void_ts) run += o.kind === 'depense' ? -o.amount : o.amount; return { ...o, after: run }; }); }
+function yearStats(y) {
+  const cut = cutOf(y), my = maxYearOf(y), act = S.members.filter(m => dueMonths(m, cut).length);
+  const debts = act.map(m => memberDebt(m, cut, my));
+  const ym_ = S.members.map(m => dueMonths(m, cut).filter(mo => yr(mo + '-01') === y).length).reduce((a, b) => a + b, 0);
+  const expected = ym_ * S.fee, due = S.members.reduce((s, m) => s + memberDebt(m, cut, my), 0);
+  return { debt: due, uptodate: debts.filter(d => d === 0).length, late: debts.filter(d => d > 0).length, expected };
+}
+
+/* ====== Exports ====== */
+let XL = null;
+const loadXL = () => XL ??= new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'xlsx.mini.min.js'; s.onload = () => ok(window.XLSX); s.onerror = ko; document.head.appendChild(s); });
+function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+async function exportXlsx(r) {
+  const X = await loadXL(), aoa = [[NAME + ' — ' + r.title], [r.sub], []];
+  r.blocks.forEach(b => { if (b.title) aoa.push([b.title]); aoa.push(b.head); b.rows.forEach(x => aoa.push(x.map(c => typeof c === 'object' && c ? c.v : c))); if (b.foot) aoa.push(b.foot.map(c => typeof c === 'object' && c ? c.v : c)); aoa.push([]); });
+  const ws = X.utils.aoa_to_sheet(aoa), wb = X.utils.book_new(); ws['!cols'] = r.blocks[0].head.map(() => ({ wch: 22 })); X.utils.book_append_sheet(wb, ws, 'Rapport');
+  X.writeFile(wb, 'famille-best-' + r.file + '.xlsx');
+}
+
+/* ====== Authentification ====== */
+async function showAuth(msg = '') {
+  clearTimeout(idle);
+  let setup = false; try { setup = (await api('status')).setup; } catch (e) { msg = msg || e.message; }
+  $('#app').innerHTML = `<div class="auth"><div class="card"><div style="text-align:center"><div class="logo" style="margin:0 auto 8px;width:60px;height:60px;font-size:28px">FB</div><h2 style="margin:0;letter-spacing:1.5px">${NAME}</h2><p class="muted" style="margin:2px 0 10px">Gestion de caisse</p></div>
+  <form id="af">${setup ? '<p class="muted">Première installation : créez le compte <b>administrateur</b>.</p><label>Nom complet</label><input id="nm" required>' : ''}
+  <label>Identifiant</label><input id="us" autocomplete="username" required><label>Mot de passe${setup ? ' (8 caractères minimum)' : ''}</label><input id="pw" type="password" autocomplete="${setup ? 'new-password' : 'current-password'}" required minlength="${setup ? 8 : 1}">
+  <p class="merr" id="aerr">${esc(msg)}</p><button class="b g" style="width:100%">${setup ? 'Créer la caisse' : 'Se connecter'}</button></form></div></div>`;
+  $('#af').onsubmit = async e => {
+    e.preventDefault(); const err = t => $('#aerr').textContent = t;
+    try {
+      if (setup) await api('setup', 'POST', { name: $('#nm').value, username: $('#us').value, password: $('#pw').value });
+      const r = await api('login', 'POST', { username: $('#us').value, password: $('#pw').value });
+      token = r.token; sessionStorage.setItem('fbtok', token); await boot();
+    } catch (x) { err(x.message); }
+  };
+}
+async function boot() { S = await api('state'); Y = cy(); view = 'dash'; resetIdle(); shell(); }
+async function refresh() { S = await api('state'); shell(); }
+
+/* ====== Coque ====== */
+let view = 'dash', Y = 2026, cotMode = 'mois', cotMonth = '', q = '', jmode = 'j', jyear = 0, jmax = 300, memFilter = 'actifs', rep = { type: 'mensuel', month: '', year: 0, quarter: 0, member: '' }, curReport = null;
+const TABS = () => [['dash', '📊 Tableau de bord'], ['mem', '👥 Membres'], ['cot', '💳 Cotisations'], ['tx', '🧾 Dépenses & recettes'], ['jour', '📒 Journal'], ['rep', '📑 Rapports'], ['years', '🗂 Historique des années'], ...(isAdmin() ? [['adm', '⚙️ Administration']] : [])];
+function shell() {
+  const t = S.user;
+  $('#app').innerHTML = `<header><div class="logo">FB</div><h1>${NAME}<small>Gestion de caisse · Franc guinéen (GNF) · cotisation ${gnf(S.fee)} / mois</small></h1><div class="who">${esc(t.name)}<br><span class="tag t-off">${ROLE[t.role]}</span> <button class="b s sm" data-a="acct">Mon compte</button> <button class="b s sm" data-a="logout">Quitter</button></div></header>
+  <nav>${TABS().map(([k, l]) => `<button data-v="${k}" class="${k === view ? 'on' : ''}">${l}</button>`).join('')}</nav><main>${({ dash, mem, cot, tx, jour, rep: repView, years: yearsView, adm })[view]()}</main>`;
+  document.querySelectorAll('nav button').forEach(b => b.onclick = () => { view = b.dataset.v; q = ''; if (view === 'adm') loadAdmin(); else shell(); window.scrollTo(0, 0); });
+  bind();
+}
+const yearSel = (id = 'ysel', ys = years(), cur = Y) => `<select id="${id}">${ys.map(y => `<option ${y === cur ? 'selected' : ''}>${y}</option>`).join('')}</select>`;
+const closeBtns = (ok = 'Enregistrer') => `<p class="merr" id="merr"></p><div class="row" style="margin:12px 0 0;justify-content:flex-end"><button type="button" class="b s" data-close>Annuler</button><button class="b g" id="mok">${ok}</button></div>`;
+function modal(html, onSubmit) {
+  const d = $('#dlg'); d.innerHTML = '<form id="mf">' + html + '</form>'; if (!d.open) d.showModal();
+  d.querySelector('[data-close]')?.addEventListener('click', () => d.close());
+  $('#mf').onsubmit = async e => { e.preventDefault(); $('#mok').disabled = true; try { await onSubmit(new FormData(e.target)); d.close(); await refresh(); } catch (x) { $('#merr').textContent = x.message; $('#mok').disabled = false; } };
+}
+
+/* ====== Tableau de bord ====== */
+function dash() {
+  const t = yearTotals(Y), st = yearStats(Y), cl = closedYear(Y), act = S.members.filter(m => m.active).length;
+  const months = monthsRange(Y + '-' + (Y === 2026 ? '10' : '01'), Y + '-12');
+  const mt = months.map(m => ({ m, i: live().filter(o => o.kind !== 'depense' && ym(o.date) === m).reduce((s, o) => s + o.amount, 0), o: live().filter(o => o.kind === 'depense' && ym(o.date) === m).reduce((s, o) => s + o.amount, 0) }));
+  const max = Math.max(1, ...mt.flatMap(x => [x.i, x.o]));
+  const K = (ic, l, v, cls = '') => `<div class="card kpi"><div class="ic">${ic}</div><div><div class="l">${l}</div><div class="v ${cls}">${v}</div></div></div>`;
+  const res = t.contrib + t.income - t.expense;
+  return `<div class="row"><h2 class="grow" style="margin:0">Tableau de bord ${Y} ${cl ? '<span class="tag t-off">clôturé</span>' : '<span class="tag t-mid">en cours</span>'}</h2>${yearSel()}<button class="b s" data-a="yrep" data-y="${Y}">Rapport annuel ${Y}</button></div>
+  ${Y === 2026 && cm() === '2026-10' && yr(S.today) === 2026 ? '' : ''}
+  <div class="grid">${K('👥', 'Membres', `${S.members.length} <span class="muted" style="font-size:13px;font-weight:400">(${act} actifs)</span>`)}${K('💰', 'Caisse actuelle', gnf(balanceNow()), balanceNow() < 0 ? 'neg' : 'pos')}${K('📥', `Cotisations encaissées ${Y}`, gnf(t.contrib))}${K('➕', `Autres recettes ${Y}`, gnf(t.income))}${K('📤', `Dépenses ${Y}`, gnf(t.expense))}${K('⚠️', 'Total des impayés' + (Y < cy() ? ' au 31/12' : ''), gnf(st.debt), st.debt ? 'neg' : 'pos')}${K('🏦', `Solde disponible fin ${Y}`, gnf(t.closing), t.closing < 0 ? 'neg' : 'pos')}${K('📈', `Bénéfice de l’année ${Y}`, gnf(res), res < 0 ? 'neg' : 'pos')}${K('✅', 'Membres à jour', st.uptodate, 'pos')}${K('⏰', 'Membres en retard', st.late, st.late ? 'neg' : '')}</div>
+  <div class="card"><h3 style="margin-top:0">Entrées et sorties par mois — ${Y} <span class="muted" style="font-weight:400;font-size:13px">(<span style="color:var(--navy)">■</span> entrées · <span style="color:var(--gold)">■</span> sorties)</span></h3><div class="bars">${mt.map(x => `<div class="m"><div class="p"><i style="background:var(--navy);height:${x.i / max * 100}%" title="Entrées ${gnf(x.i)}"></i><i style="background:var(--gold);height:${x.o / max * 100}%" title="Sorties ${gnf(x.o)}"></i></div>${MOIS[+x.m.slice(5) - 1].slice(0, 3)}</div>`).join('')}</div></div>
+  <div class="card"><h3 style="margin-top:0">Comptes de l’exercice ${Y}</h3><table><tr><td>Solde reporté de l’année précédente (non compté comme recette)</td><td class="n">${gnf(t.opening)}</td></tr><tr><td>+ Cotisations</td><td class="n">${gnf(t.contrib)}</td></tr><tr><td>+ Autres recettes</td><td class="n">${gnf(t.income)}</td></tr><tr><td>− Dépenses</td><td class="n">${gnf(t.expense)}</td></tr><tr><td><b>= Solde de caisse (entrées − sorties)</b></td><td class="n"><b>${gnf(t.closing)}</b></td></tr><tr><td class="muted">Cotisations attendues pour les mois de ${Y} (${S.members.length} membres)</td><td class="n">${gnf(st.expected)}</td></tr></table></div>
+  ${S.members.length ? '' : '<div class="warn">Commencez par ajouter les membres dans l’onglet « Membres ».</div>'}`;
+}
+
+/* ====== Membres ====== */
+function mem() {
+  const list = S.members.filter(m => (memFilter === 'tous' || m.active) && (m.number + mname(m) + m.phone).toLowerCase().includes(q.toLowerCase()));
+  return `<h2>Membres (${S.members.length})</h2><div class="row"><input class="grow" id="q" placeholder="Rechercher (nom, numéro, téléphone)…" value="${esc(q)}"><select id="mf2"><option value="actifs" ${memFilter === 'actifs' ? 'selected' : ''}>Membres actifs</option><option value="tous" ${memFilter === 'tous' ? 'selected' : ''}>Tous (y compris sortis)</option></select>${canWrite() ? '<button class="b g" data-a="addm">+ Ajouter un membre</button>' : ''}</div>
+  <div class="card tw"><table><tr><th>N°</th><th>Nom et prénom</th><th>Téléphone</th><th>Adhésion</th><th>Statut</th><th class="n">Total versé</th><th class="n">Mois impayés</th><th class="n">Dette</th><th></th></tr>
+  ${list.map(m => { const tot = live().filter(o => o.kind === 'cotisation' && o.member_id === m.id).reduce((s, o) => s + o.amount, 0), um = unpaidMonths(m).length, d = memberDebt(m); return `<tr><td>${m.number}</td><td><a href="#" data-a="mdet" data-id="${m.id}">${esc(m.last_name.toUpperCase() + ' ' + m.first_name)}</a></td><td>${esc(m.phone)}</td><td>${mlabel(firstMonth(m))}</td><td><span class="tag ${m.active ? 't-ok' : 't-off'}">${m.active ? 'Actif' : 'Sorti'}</span></td><td class="n">${gnf(tot)}</td><td class="n">${um}</td><td class="n ${d ? 'neg' : ''}">${gnf(d)}</td><td class="right"><button class="b s sm" data-a="mdet" data-id="${m.id}">Historique</button> ${canWrite() ? `<button class="b s sm" data-a="editm" data-id="${m.id}">Modifier</button>` : ''}</td></tr>`; }).join('') || '<tr><td colspan="9" class="muted">Aucun membre.</td></tr>'}</table></div>`;
+}
+function memberForm(m) {
+  modal(`<h3 style="margin-top:0">${m ? 'Modifier ' + m.number : 'Nouveau membre'}</h3><div class="row"><div class="grow"><label>Nom</label><input name="last_name" required value="${esc(m?.last_name)}"></div><div class="grow"><label>Prénom</label><input name="first_name" required value="${esc(m?.first_name)}"></div></div>
+  <label>Téléphone</label><input name="phone" inputmode="tel" value="${esc(m?.phone)}"><label>Mois d’adhésion (première cotisation)</label><input type="month" name="joined" min="${S.start}" required value="${m?.joined || (cm() > S.start ? cm() : S.start)}">
+  ${m ? `<label>Statut</label><select name="active"><option value="1" ${m.active ? 'selected' : ''}>Actif</option><option value="0" ${m.active ? '' : 'selected'}>Sorti / désactivé (historique conservé)</option></select><label>Dernier mois dû (si sorti)</label><input type="month" name="left_month" value="${m.left_month || ''}"><p class="muted" style="font-size:13px">Un membre n’est jamais supprimé : son historique financier reste intact.</p>` : ''}${closeBtns()}`, async fd => {
+    const b = { last_name: fd.get('last_name'), first_name: fd.get('first_name'), phone: fd.get('phone'), joined: fd.get('joined') };
+    if (m) await api('members/' + m.id, 'PUT', { ...b, active: fd.get('active') === '1', left_month: fd.get('left_month') }); else await api('members', 'POST', b);
+  });
+}
+function memberDetail(m) {
+  const ops = S.ops.filter(o => o.kind === 'cotisation' && o.member_id === m.id).sort((a, b) => b.id - a.id);
+  const tot = ops.filter(o => !o.void_ts).reduce((s, o) => s + o.amount, 0), months = dueMonths(m), paid = months.filter(mo => paidFor(m.id, mo) >= S.fee), unpaid = months.filter(mo => paidFor(m.id, mo) < S.fee);
+  const adv = [...new Set(ops.filter(o => !o.void_ts && o.month > cm()).map(o => o.month))].sort();
+  const d = $('#dlg'); d.innerHTML = `<h3 style="margin-top:0">${m.number} — ${esc(mname(m))} ${m.active ? '' : '<span class="tag t-off">sorti</span>'}</h3><p class="muted">Tél : ${esc(m.phone) || '—'} · adhésion ${mlabel(firstMonth(m))}</p>
+  <div class="grid" style="grid-template-columns:repeat(2,1fr)"><div class="card kpi"><div><div class="l">Total versé depuis l’adhésion</div><div class="v">${gnf(tot)}</div></div></div><div class="card kpi"><div><div class="l">Dette actuelle</div><div class="v ${memberDebt(m) ? 'neg' : 'pos'}">${gnf(memberDebt(m))}</div></div></div></div>
+  <p><b>Mois payés (${paid.length}) :</b> ${paid.map(mlabel).join(', ') || '—'}<br><b class="neg">Mois impayés (${unpaid.length}) :</b> ${unpaid.map(mo => mlabel(mo) + (paidFor(m.id, mo) ? ' (partiel)' : '')).join(', ') || '—'}${adv.length ? `<br><b>En avance :</b> ${adv.map(mlabel).join(', ')}` : ''}</p>
+  <div class="tw" style="max-height:260px;overflow:auto"><table><tr><th>Réf.</th><th>Date</th><th>Mois</th><th class="n">Montant</th><th>Mode</th></tr>${ops.map(o => `<tr class="${o.void_ts ? 'void' : ''}"><td>${o.ref}</td><td>${fdate(o.date)}</td><td>${mlabel(o.month)}</td><td class="n">${gnf(o.amount)}</td><td>${esc(o.method)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Aucun versement.</td></tr>'}</table></div>
+  <div class="row" style="margin:12px 0 0;justify-content:flex-end"><button class="b s" data-a="mrep" data-id="${m.id}">Rapport individuel</button>${canWrite() ? `<button class="b g" data-a="pay" data-id="${m.id}">Encaisser</button>` : ''}<button class="b s" data-close>Fermer</button></div>`;
+  if (!d.open) d.showModal(); d.querySelector('[data-close]').onclick = () => d.close();
+}
+
+/* ====== Cotisations ====== */
+function cot() {
+  cotMonth ||= cm() < S.start ? S.start : cm();
+  const head = `<h2>Suivi des cotisations — ${gnf(S.fee)} par membre et par mois</h2><div class="tabs"><button class="${cotMode === 'mois' ? 'on' : ''}" data-cm="mois">Détail d’un mois</button><button class="${cotMode === 'grille' ? 'on' : ''}" data-cm="grille">Grille annuelle</button></div>`;
+  if (cotMode === 'grille') {
+    const months = monthsRange(Y + '-' + (Y === 2026 ? '10' : '01'), Y + '-12'), list = S.members.filter(m => (m.active || dueMonths(m).length) && mname(m).toLowerCase().includes(q.toLowerCase()));
+    return head + `<div class="row">${yearSel()}<input class="grow" id="q" placeholder="Rechercher un membre…" value="${esc(q)}"><span class="muted"><span class="tag t-ok">payé</span> <span class="tag t-mid">partiel</span> <span class="tag t-bad">non payé</span> <span class="tag t-info">en avance</span></span></div>
+    <div class="card tw"><table><tr><th>Membre</th>${months.map(m => `<th class="n">${MOIS[+m.slice(5) - 1].slice(0, 3)}</th>`).join('')}</tr>${list.map(m => `<tr><td>${esc(mname(m))}</td>${months.map(mo => { const s = statusOf(m, mo), cls = { 'PAYÉ': 'c-ok', 'PARTIEL': 'c-mid', 'NON PAYÉ': 'c-bad', 'EN AVANCE': 'c-adv' }[s] || 'c-na', p = paidFor(m.id, mo), lbl = s === 'PAYÉ' ? '✓' : s === 'PARTIEL' ? Math.round(p / 1000) + 'k' : s === 'EN AVANCE' ? '↑' : s ? '—' : ''; return `<td><button class="cell ${cls}" ${s || !canWrite() ? '' : ''} ${(!s && !(canWrite() && mo >= firstMonth(m))) ? 'disabled' : `data-a="pay" data-id="${m.id}" data-mo="${mo}"`}>${lbl}</button></td>`; }).join('')}</tr>`).join('') || '<tr><td>Aucun membre.</td></tr>'}</table></div>`;
+  }
+  const rows = monthRows(cotMonth), tot = monthTotals(rows);
+  return head + `<div class="row"><input type="month" id="cmonth" min="${S.start}" value="${cotMonth}"><input class="grow" id="q" placeholder="Rechercher un membre…" value="${esc(q)}">${canWrite() ? '<button class="b g" data-a="pay">+ Encaisser une cotisation</button>' : ''}</div>
+  <div class="grid"><div class="card kpi"><div><div class="l">Total attendu</div><div class="v">${gnf(tot.expected)}</div></div></div><div class="card kpi"><div><div class="l">Total encaissé</div><div class="v pos">${gnf(tot.paid)}</div></div></div><div class="card kpi"><div><div class="l">Reste à recouvrer</div><div class="v neg">${gnf(tot.left)}</div></div></div><div class="card kpi"><div><div class="l">Membres ayant payé</div><div class="v">${tot.ok}</div></div></div><div class="card kpi"><div><div class="l">Membres n’ayant pas payé</div><div class="v">${tot.ko}</div></div></div></div>
+  <div class="card tw"><table><tr><th>Membre</th><th>Mois</th><th class="n">Attendu</th><th class="n">Versé</th><th>Date</th><th>Mode</th><th>Statut</th><th></th></tr>${rows.filter(r => mname(r.m).toLowerCase().includes(q.toLowerCase())).map(r => `<tr><td>${esc(mname(r.m))}</td><td>${mlabel(cotMonth)}</td><td class="n">${gnf(r.expected)}</td><td class="n">${gnf(r.paid)}</td><td>${r.date ? fdate(r.date) : '—'}</td><td>${esc(r.method) || '—'}</td><td>${stag(r.status)}</td><td class="right">${canWrite() && r.paid < S.fee ? `<button class="b s sm" data-a="pay" data-id="${r.m.id}" data-mo="${cotMonth}">Encaisser</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="8" class="muted">Aucun membre concerné ce mois-ci.</td></tr>'}</table></div>`;
+}
+function monthRows(mo) {
+  return S.members.map(m => {
+    const due = dueMonths(m, mo > cm() ? mo : cm()).includes(mo) && m.joined <= mo, ops = live().filter(o => o.kind === 'cotisation' && o.member_id === m.id && o.month === mo), paid = ops.reduce((s, o) => s + o.amount, 0);
+    if (!due && !paid) return null; const last = ops[ops.length - 1];
+    return { m, expected: due ? S.fee : 0, paid, date: last?.date, method: [...new Set(ops.map(o => o.method))].join(', '), status: statusOf(m, mo) || (paid ? 'EN AVANCE' : null) };
+  }).filter(Boolean);
+}
+const monthTotals = rows => ({ expected: rows.reduce((s, r) => s + r.expected, 0), paid: rows.reduce((s, r) => s + r.paid, 0), left: rows.reduce((s, r) => s + Math.max(0, r.expected - r.paid), 0), ok: rows.filter(r => r.paid >= S.fee).length, ko: rows.filter(r => r.expected && r.paid < S.fee).length });
+function payForm(mid, mo) {
+  const opts = S.members.filter(m => m.active).map(m => `<option value="${m.id}" ${m.id === mid ? 'selected' : ''}>${m.number} — ${esc(mname(m))}</option>`).join('');
+  modal(`<h3 style="margin-top:0">Encaisser une cotisation</h3><label>Membre</label><select name="mid" id="pm" required>${opts}</select><label>À partir du mois</label><input type="month" name="mo" id="pmo" min="${S.start}" required value="${mo || cm()}">
+  <label>Montant versé (GNF)</label><input name="amount" id="pa" inputmode="numeric" required><p class="muted" id="pprev" style="font-size:13px"></p><label>Date du paiement</label><input type="date" name="date" required value="${S.today}" min="2026-10-01" max="${S.today}"><label>Mode de paiement</label><select name="method">${S.methods.map(x => `<option>${x}</option>`).join('')}</select><label>Observation (facultatif)</label><input name="note">${closeBtns('Encaisser')}`, async fd => {
+    const lines = distribute(+fd.get('mid'), fd.get('mo'), amt(fd.get('amount'))); if (!lines.length) throw new Error('Montant ou mois invalide.');
+    await api('cotisations', 'POST', { member_id: +fd.get('mid'), date: fd.get('date'), method: fd.get('method'), note: fd.get('note'), lines });
+  });
+  const upd = () => { const m = memberById(+$('#pm').value), mo_ = $('#pmo').value; if (!m || !mo_) return; const rem = Math.max(0, S.fee - paidFor(m.id, mo_)); if (!$('#pa').dataset.t) $('#pa').value = rem || ''; const l = distribute(m.id, mo_, amt($('#pa').value)); $('#pprev').innerHTML = l.length ? 'Sera affecté à : ' + l.map(x => `${mlabel(x.month)} (${gnf(x.amount)})`).join(' · ') + '.<br>Le montant dépassant un mois passe aux mois suivants (« en avance »).' : ''; };
+  ['#pm', '#pmo'].forEach(s => $(s).oninput = () => { delete $('#pa').dataset.t; upd(); }); $('#pa').oninput = () => { $('#pa').dataset.t = 1; upd(); }; upd();
+}
+function distribute(mid, start, total) {
+  const m = memberById(mid), out = []; if (!m || !start || total <= 0) return out; if (start < firstMonth(m)) start = firstMonth(m);
+  let mo = start, left = total; for (let i = 0; i < 60 && left > 0; i++) { const room = S.fee - paidFor(mid, mo); if (room > 0) { const a = Math.min(room, left); out.push({ month: mo, amount: a }); left -= a; } let [y, mm] = mo.split('-').map(Number); if (++mm > 12) { mm = 1; y++; } mo = y + '-' + String(mm).padStart(2, '0'); }
+  return out;
+}
+
+/* ====== Dépenses & recettes ====== */
+function tx() {
+  const t = yearTotals(Y), list = S.ops.filter(o => o.kind !== 'cotisation' && yr(o.date) === Y && (o.label + o.person + o.ref).toLowerCase().includes(q.toLowerCase())).sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+  return `<h2>Dépenses & autres recettes</h2><div class="row">${yearSel()}<input class="grow" id="q" placeholder="Rechercher…" value="${esc(q)}">${canWrite() ? '<button class="b" data-a="addtx" data-k="depense">− Nouvelle dépense</button><button class="b g" data-a="addtx" data-k="recette">+ Nouvelle recette</button>' : ''}</div>
+  <p class="muted">Solde de caisse = total des entrées − total des sorties. Entrées ${Y} : ${gnf(t.contrib + t.income)} (dont cotisations ${gnf(t.contrib)}) · Sorties ${Y} : ${gnf(t.expense)} · <b>Solde fin ${Y} : ${gnf(t.closing)}</b></p>
+  <div class="card tw"><table><tr><th>Réf.</th><th>Date</th><th>Type</th><th>Motif</th><th>Personne</th><th>Justificatif</th><th>Observation</th><th class="n">Montant</th><th></th></tr>${list.map(o => `<tr class="${o.void_ts ? 'void' : ''}"><td>${o.ref}</td><td>${fdate(o.date)}</td><td class="keep"><span class="tag ${o.kind === 'depense' ? 't-bad' : 't-ok'}">${o.kind === 'depense' ? 'Dépense' : 'Recette'}</span></td><td style="white-space:normal">${esc(o.label)}</td><td>${esc(o.person)}</td><td>${esc(o.receipt)}</td><td style="white-space:normal">${esc(o.note)}</td><td class="n">${o.kind === 'depense' ? '−' : '+'}${gnf(o.amount)}</td><td class="right">${o.void_ts ? `<span class="tag t-off" title="${esc(o.void_reason)}">annulée</span>` : canWrite() ? `<button class="b d sm" data-a="void" data-id="${o.id}">Annuler</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="9" class="muted">Aucune opération.</td></tr>'}</table></div>`;
+}
+function txForm(kind) {
+  const dep = kind === 'depense';
+  modal(`<h3 style="margin-top:0">${dep ? 'Nouvelle dépense' : 'Nouvelle recette (don, activité…)'}</h3><label>Date</label><input type="date" name="date" required value="${S.today}" min="2026-10-01" max="${S.today}"><label>Motif</label><input name="label" required>
+  <label>Montant (GNF)</label><input name="amount" inputmode="numeric" required>${dep ? '<label>Personne ayant effectué la dépense</label><input name="person" required>' : '<label>Reçu de (facultatif)</label><input name="person">'}
+  <label>Mode</label><select name="method">${S.methods.map(x => `<option>${x}</option>`).join('')}</select><label>Justificatif (facultatif : n° de facture, lien…)</label><input name="receipt"><label>Observation</label><input name="note">${closeBtns()}`, async fd => {
+    const a = amt(fd.get('amount')); if (dep && a > balanceNow() && !confirm('Cette dépense dépasse le solde de la caisse (' + gnf(balanceNow()) + '). Continuer ?')) throw new Error('Dépense non enregistrée.');
+    await api('ops', 'POST', { kind, date: fd.get('date'), label: fd.get('label'), amount: a, person: fd.get('person'), method: fd.get('method'), receipt: fd.get('receipt'), note: fd.get('note') });
+  });
+}
+function voidForm(o) {
+  modal(`<h3 style="margin-top:0">Annuler l’opération ${o.ref}</h3><p>${esc(o.kind)} de <b>${gnf(o.amount)}</b> du ${fdate(o.date)}${o.member_id ? ' — ' + esc(mname(memberById(o.member_id))) : ''}</p><p class="muted">L’opération n’est pas effacée : elle reste visible dans le journal, barrée, avec votre nom et le motif. Pour corriger, saisissez ensuite la bonne opération.</p><label>Motif de l’annulation (obligatoire)</label><input name="reason" required minlength="5">${closeBtns('Confirmer l’annulation')}`, fd => api(`ops/${o.id}/void`, 'POST', { reason: fd.get('reason') }));
+}
+
+/* ====== Journal & audit ====== */
+let auditRows = null;
+function jour() {
+  const tabs = `<div class="tabs"><button class="${jmode === 'j' ? 'on' : ''}" data-jm="j">Journal de caisse</button>${S.user.role !== 'consultation' ? `<button class="${jmode === 'a' ? 'on' : ''}" data-jm="a">Historique d’audit</button>` : ''}</div>`;
+  if (jmode === 'a' && S.user.role !== 'consultation') {
+    if (!auditRows) { api('audit').then(r => { auditRows = r.audit; shell(); }).catch(e => { auditRows = []; alert(e.message); shell(); }); return `<h2>Journal</h2>${tabs}<p>Chargement…</p>`; }
+    return `<h2>Historique d’audit</h2>${tabs}<p class="muted">Toute action (saisie, annulation, modification, connexion, sauvegarde) est tracée ici et ne peut pas être effacée. 500 dernières lignes.</p><div class="card tw"><table><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Réf.</th><th>Détail</th></tr>${auditRows.map(a => `<tr><td>${fts(a.ts)}</td><td>${esc(a.user_name)}</td><td><span class="tag t-off">${esc(a.action)}</span></td><td>${esc(a.ref)}</td><td style="white-space:normal">${esc(a.detail)}</td></tr>`).join('')}</table></div>`;
+  }
+  const yy = jyear || Y, all = journal().filter(o => yr(o.date) === yy && (o.ref + o.label + o.person + o.user_name + mname(memberById(o.member_id))).toLowerCase().includes(q.toLowerCase())).reverse(), list = all.slice(0, jmax);
+  return `<h2>Journal de caisse</h2>${tabs}<div class="row">${yearSel('jy', years(), yy)}<input class="grow" id="q" placeholder="Rechercher (réf., membre, motif…)" value="${esc(q)}"></div><p class="muted">Solde fin ${yy} : <b>${gnf(yearTotals(yy).closing)}</b>. Les opérations annulées restent visibles (barrées).</p>
+  <div class="card tw"><table><tr><th>Réf.</th><th>Date et heure</th><th>Type</th><th>Membre</th><th class="n">Montant</th><th>Enregistré par</th><th class="n">Solde après</th></tr>${list.map(o => `<tr class="${o.void_ts ? 'void' : ''}"><td>${o.ref}</td><td>${fts(o.ts)}</td><td class="keep">${o.kind === 'cotisation' ? 'Cotisation ' + mlabel(o.month) : o.kind === 'recette' ? 'Recette : ' + esc(o.label) : 'Dépense : ' + esc(o.label)}${o.void_ts ? `<br><small>ANNULÉE par ${esc(o.void_by)} le ${fdate(o.void_ts)} — ${esc(o.void_reason)}</small>` : ''}</td><td>${esc(mname(memberById(o.member_id)))}</td><td class="n">${o.kind === 'depense' ? '−' : '+'}${gnf(o.amount)}</td><td>${esc(o.user_name)}</td><td class="n keep">${gnf(o.after)}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">Aucune opération.</td></tr>'}</table></div>${all.length > jmax ? '<button class="b s" data-a="more">Afficher plus</button>' : ''}`;
+}
+
+/* ====== Rapports ====== */
+function buildReport() {
+  const R = rep, fee = S.fee, H = (title, sub, file, blocks) => ({ title, sub, file, blocks }), gf = n => ({ v: n });
+  const cotRows = mo => monthRows(mo).map(r => [mname(r.m), gf(r.expected), gf(r.paid), r.date ? fdate(r.date) : '', r.method, r.status || '']);
+  const opsList = (f) => S.ops.filter(f).sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id).map(o => [o.ref, fdate(o.date), o.kind === 'depense' ? 'Dépense' : 'Recette', o.label, o.person, gf(o.kind === 'depense' ? -o.amount : o.amount), o.void_ts ? 'ANNULÉE : ' + o.void_reason : '']);
+  const sumLive = (f) => live().filter(f).reduce((s, o) => s + o.amount, 0);
+  if (R.type === 'mensuel') {
+    const mo = R.month || cm(), rows = monthRows(mo), tot = monthTotals(rows), e = sumLive(o => o.kind === 'depense' && ym(o.date) === mo), r = sumLive(o => o.kind === 'recette' && ym(o.date) === mo), c = sumLive(o => o.kind === 'cotisation' && ym(o.date) === mo);
+    return H('Rapport mensuel — ' + mlabel(mo), `Cotisations attendues ${gnf(tot.expected)} · versées pour ce mois ${gnf(tot.paid)} · reste ${gnf(tot.left)}`, 'mensuel-' + mo, [
+      { title: 'Cotisations du mois', head: ['Membre', 'Attendu', 'Versé', 'Date', 'Mode', 'Statut'], rows: cotRows(mo) },
+      { title: 'Mouvements de caisse du mois', head: ['Cotisations encaissées', 'Autres recettes', 'Dépenses', 'Résultat du mois'], rows: [[gf(c), gf(r), gf(e), gf(c + r - e)]] },
+      { title: 'Recettes et dépenses', head: ['Réf.', 'Date', 'Type', 'Motif', 'Personne', 'Montant', 'Observation'], rows: opsList(o => o.kind !== 'cotisation' && ym(o.date) === mo) }]);
+  }
+  if (R.type === 'trimestriel') {
+    const y = R.year || cy(), q_ = R.quarter, ms = monthsRange(y + '-' + String(q_ * 3 - 2).padStart(2, '0'), y + '-' + String(q_ * 3).padStart(2, '0')).filter(m => m >= S.start);
+    const rows = ms.map(mo => { const c = sumLive(o => o.kind === 'cotisation' && ym(o.date) === mo), r = sumLive(o => o.kind === 'recette' && ym(o.date) === mo), e = sumLive(o => o.kind === 'depense' && ym(o.date) === mo); return [mlabel(mo), c, r, e, c + r - e]; });
+    const T = i => rows.reduce((s, r) => s + r[i], 0);
+    return H(`Rapport trimestriel — T${q_} ${y}`, ms.length ? mlabel(ms[0]) + ' à ' + mlabel(ms[ms.length - 1]) : 'Trimestre antérieur au démarrage', `trimestriel-${y}-T${q_}`, [
+      { title: 'Synthèse', head: ['Mois', 'Cotisations', 'Autres recettes', 'Dépenses', 'Résultat'], rows: rows.map(r => [r[0], gf(r[1]), gf(r[2]), gf(r[3]), gf(r[4])]), foot: ['Total trimestre', gf(T(1)), gf(T(2)), gf(T(3)), gf(T(4))] },
+      { title: 'Recettes et dépenses', head: ['Réf.', 'Date', 'Type', 'Motif', 'Personne', 'Montant', 'Observation'], rows: opsList(o => o.kind !== 'cotisation' && ms.includes(ym(o.date))) }]);
+  }
+  if (R.type === 'annuel') {
+    const y = R.year || cy(), t = yearTotals(y), st = yearStats(y), ms = monthsRange(y + (y === 2026 ? '-10' : '-01'), y + '-12'); let run = t.opening;
+    const rows = ms.map(mo => { const c = sumLive(o => o.kind === 'cotisation' && ym(o.date) === mo), r = sumLive(o => o.kind === 'recette' && ym(o.date) === mo), e = sumLive(o => o.kind === 'depense' && ym(o.date) === mo); run += c + r - e; return [mlabel(mo), gf(c), gf(r), gf(e), gf(run)]; });
+    return H(`Rapport annuel ${y}` + (closedYear(y) ? ' (exercice clôturé)' : ' (en cours)'), `Ouverture ${gnf(t.opening)} · Clôture ${gnf(t.closing)} · Impayés ${gnf(st.debt)}`, 'annuel-' + y, [
+      { title: 'Comptes de l’exercice', head: ['Poste', 'Montant'], rows: [['Solde d’ouverture (report, non compté en recette)', gf(t.opening)], ['+ Cotisations', gf(t.contrib)], ['+ Autres recettes', gf(t.income)], ['− Dépenses', gf(t.expense)]], foot: ['= Solde de clôture', gf(t.closing)] },
+      { title: 'Détail mensuel', head: ['Mois', 'Cotisations', 'Autres recettes', 'Dépenses', 'Solde fin de mois'], rows },
+      { title: 'Cotisations par membre', head: ['N°', 'Membre', 'Versé en ' + y, 'Dette à fin de période'], rows: S.members.map(m => [m.number, mname(m), gf(live().filter(o => o.kind === 'cotisation' && o.member_id === m.id && yr(o.date) === y).reduce((s, o) => s + o.amount, 0)), gf(memberDebt(m, cutOf(y), maxYearOf(y)))]) },
+      { title: 'Dépenses de l’année', head: ['Réf.', 'Date', 'Type', 'Motif', 'Personne', 'Montant', 'Observation'], rows: opsList(o => o.kind === 'depense' && yr(o.date) === y) }]);
+  }
+  if (R.type === 'individuel') {
+    const m = memberById(+R.member) || S.members[0]; if (!m) return H('Rapport individuel', 'Aucun membre', 'individuel', [{ head: ['—'], rows: [] }]);
+    const ops = S.ops.filter(o => o.kind === 'cotisation' && o.member_id === m.id), months = dueMonths(m);
+    return H(`Rapport individuel — ${m.number} ${mname(m)}`, `Total versé ${gnf(live().filter(o => o.kind === 'cotisation' && o.member_id === m.id).reduce((s, o) => s + o.amount, 0))} · Dette ${gnf(memberDebt(m))}`, 'membre-' + m.number, [
+      { title: 'État mois par mois', head: ['Mois', 'Attendu', 'Versé', 'Statut'], rows: months.map(mo => [mlabel(mo), gf(fee), gf(paidFor(m.id, mo)), statusOf(m, mo)]) },
+      { title: 'Versements', head: ['Réf.', 'Date', 'Mois', 'Montant', 'Mode', 'État'], rows: ops.map(o => [o.ref, fdate(o.date), mlabel(o.month), gf(o.amount), o.method, o.void_ts ? 'ANNULÉ : ' + o.void_reason : 'valide']) }]);
+  }
+  if (R.type === 'ajour' || R.type === 'retard') {
+    const late = R.type === 'retard', act = S.members.filter(m => m.active && dueMonths(m).length), list = act.filter(m => (memberDebt(m) > 0) === late);
+    return H(late ? 'Membres en retard' : 'Membres à jour', `Au ${fdate(S.today)} · ${list.length} membre(s)`, (late ? 'retard' : 'ajour') + '-' + S.today, [{ head: late ? ['N°', 'Membre', 'Téléphone', 'Mois impayés', 'Nb mois', 'Dette'] : ['N°', 'Membre', 'Téléphone', 'Total versé'], rows: list.map(m => late ? [m.number, mname(m), m.phone, unpaidMonths(m).map(mlabel).join(', '), unpaidMonths(m).length, gf(memberDebt(m))] : [m.number, mname(m), m.phone, gf(live().filter(o => o.kind === 'cotisation' && o.member_id === m.id).reduce((s, o) => s + o.amount, 0))]), foot: late ? ['Total', '', '', '', '', gf(list.reduce((s, m) => s + memberDebt(m), 0))] : undefined }]);
+  }
+  if (R.type === 'depenses') {
+    const y = R.year || cy(); return H('Rapport des dépenses ' + y, `Total ${gnf(sumLive(o => o.kind === 'depense' && yr(o.date) === y))}`, 'depenses-' + y, [{ head: ['Réf.', 'Date', 'Type', 'Motif', 'Personne', 'Montant', 'Observation'], rows: opsList(o => o.kind === 'depense' && yr(o.date) === y) }]);
+  }
+  if (R.type === 'journal') {
+    const y = R.year || cy(); return H('Journal de caisse ' + y, 'Toutes les opérations, y compris annulées', 'journal-' + y, [{ head: ['Réf.', 'Date et heure', 'Type', 'Membre', 'Montant', 'Par', 'Solde après', 'État'], rows: journal().filter(o => yr(o.date) === y).map(o => [o.ref, fts(o.ts), o.kind === 'cotisation' ? 'Cotisation ' + mlabel(o.month) : o.label, mname(memberById(o.member_id)), gf(o.kind === 'depense' ? -o.amount : o.amount), o.user_name, gf(o.after), o.void_ts ? 'ANNULÉE : ' + o.void_reason : '']) }] );
+  }
+  const rows = years().map(y => { const t = yearTotals(y); return [String(y), gf(t.opening), gf(t.contrib), gf(t.income), gf(t.expense), gf(t.closing)]; });
+  return H('Bilan général de la caisse depuis octobre 2026', `Solde actuel ${gnf(balanceNow())} · Impayés ${gnf(S.members.reduce((s, m) => s + memberDebt(m), 0))}`, 'bilan-general', [{ title: 'Année par année', head: ['Année', 'Ouverture (report)', 'Cotisations', 'Autres recettes', 'Dépenses', 'Clôture'], rows }]);
+}
+function repView() {
+  rep.month ||= cm(); rep.year ||= cy(); rep.quarter ||= Math.ceil(+cm().slice(5) / 3);
+  const T = [['mensuel', 'Mensuel'], ['trimestriel', 'Trimestriel'], ['annuel', 'Annuel'], ['individuel', 'Individuel par membre'], ['ajour', 'Membres à jour'], ['retard', 'Membres en retard'], ['depenses', 'Dépenses'], ['journal', 'Journal de caisse'], ['bilan', 'Bilan général depuis oct. 2026']];
+  curReport = buildReport();
+  const r = curReport;
+  return `<h2>Rapports financiers</h2><div class="row noprint"><select id="rt">${T.map(([k, l]) => `<option value="${k}" ${rep.type === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
+  ${rep.type === 'mensuel' ? `<input type="month" id="rmo" min="${S.start}" value="${rep.month}">` : ''}${['trimestriel', 'annuel', 'depenses', 'journal'].includes(rep.type) ? yearSel('ry', years(), rep.year) : ''}${rep.type === 'trimestriel' ? `<select id="rq">${[1, 2, 3, 4].map(n => `<option value="${n}" ${rep.quarter === n ? 'selected' : ''}>T${n}</option>`).join('')}</select>` : ''}
+  ${rep.type === 'individuel' ? `<select id="rm">${S.members.map(m => `<option value="${m.id}" ${+rep.member === m.id ? 'selected' : ''}>${m.number} — ${esc(mname(m))}</option>`).join('')}</select>` : ''}
+  <button class="b g" onclick="print()">🖨 PDF / Imprimer</button><button class="b s" data-a="xlsx">📗 Excel</button></div>
+  <div class="card"><div class="printhead"><b style="font-size:20px;color:#0b1f3a">${NAME}</b> — Gestion de caisse</div><h3 style="margin-top:0">${esc(r.title)}</h3><p class="muted">${esc(r.sub)}</p>
+  ${r.blocks.map(b => `${b.title ? `<h3>${esc(b.title)}</h3>` : ''}<div class="tw"><table><tr>${b.head.map((h, i) => `<th class="${typeof (b.rows[0] || [])[i] === 'object' ? 'n' : ''}">${esc(h)}</th>`).join('')}</tr>${b.rows.map(x => `<tr>${x.map(c => `<td class="${c && typeof c === 'object' ? 'n' : ''}">${c && typeof c === 'object' ? gnf(c.v) : esc(c)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${b.head.length}" class="muted">Aucune donnée.</td></tr>`}</table>${b.foot ? `<table><tfoot><tr>${b.foot.map((c, i) => `<td class="${c && typeof c === 'object' ? 'n' : ''}">${c && typeof c === 'object' ? gnf(c.v) : esc(c)}</td>`).join('')}</tr></tfoot></table>` : ''}</div>`).join('')}
+  <p class="muted">Édité le ${fdate(S.today)} par ${esc(S.user.name)}</p></div>`;
+}
+
+/* ====== Historique des années ====== */
+function yearsView() {
+  return `<h2>Historique des années</h2><p class="muted">Les années s’ajoutent automatiquement. Chaque année terminée est clôturée et archivée : cotisations, dépenses, recettes, solde de clôture et rapports restent consultables à vie. Le solde de clôture est reporté comme solde d’ouverture de l’année suivante, sans être recompté en recette.</p>
+  ${years().reverse().map(y => { const t = yearTotals(y), cl = closedYear(y); return `<div class="card"><div class="row"><h3 class="grow" style="margin:0;font-size:22px">${y} ${cl ? '<span class="tag t-off">clôturée le ' + fdate(cl.closed_at) + '</span>' : '<span class="tag t-mid">en cours</span>'}${y === 2026 ? ' <span class="muted" style="font-size:13px;font-weight:400">octobre à décembre</span>' : ''}</h3><button class="b g" data-a="yopen" data-y="${y}">Consulter les comptes</button><button class="b s" data-a="yrep" data-y="${y}">Rapport annuel</button></div>
+  <div class="grid"><div><span class="muted">Ouverture (report)</span><br><b>${gnf(t.opening)}</b></div><div><span class="muted">Cotisations</span><br><b>${gnf(t.contrib)}</b></div><div><span class="muted">Autres recettes</span><br><b>${gnf(t.income)}</b></div><div><span class="muted">Dépenses</span><br><b>${gnf(t.expense)}</b></div><div><span class="muted">Clôture</span><br><b>${gnf(t.closing)}</b></div>${cl ? `<div><span class="muted">Impayés au 31/12</span><br><b class="neg">${gnf(cl.snapshot.debts)}</b></div>` : ''}</div></div>`; }).join('')}`;
+}
+
+/* ====== Administration ====== */
+let admUsers = [];
+async function loadAdmin() { try { admUsers = (await api('users')).users; } catch (e) { alert(e.message); } shell(); }
+function adm() {
+  return `<h2>Administration & sécurité</h2>
+  <div class="card"><div class="row"><h3 class="grow" style="margin:0">Utilisateurs et niveaux d’accès</h3><button class="b g" data-a="addu">+ Ajouter</button></div><div class="tw"><table><tr><th>Identifiant</th><th>Nom</th><th>Profil</th><th>État</th><th></th></tr>${admUsers.map(u => `<tr><td>${esc(u.username)}</td><td>${esc(u.name)}</td><td>${ROLE[u.role]}</td><td><span class="tag ${u.active ? 't-ok' : 't-off'}">${u.active ? 'Actif' : 'Désactivé'}</span></td><td class="right"><button class="b s sm" data-a="editu" data-id="${u.id}">Modifier</button></td></tr>`).join('')}</table></div>
+  <p class="muted" style="font-size:13px"><b>Administrateur</b> : accès complet. <b>Trésorier</b> : cotisations, dépenses, recettes, annulations motivées, rapports. <b>Consultation</b> : lecture seule (sans numéros de téléphone).</p></div>
+  <div class="card"><h3 style="margin-top:0">Sauvegarde et restauration</h3><p class="muted">La base est hébergée sur Cloudflare D1. Un instantané interne est pris automatiquement chaque dimanche (20 conservés) et avant toute restauration. Cloudflare conserve en plus 30 jours d’historique de la base (Time Travel). Téléchargez aussi une copie régulièrement.</p>
+  <div class="row"><button class="b" data-a="backup">⬇ Télécharger une sauvegarde</button><button class="b s" data-a="snap">Créer un instantané interne</button><button class="b d" data-a="restore">Restaurer une sauvegarde…</button></div></div>`;
+}
+function userForm(u) {
+  modal(`<h3 style="margin-top:0">${u ? 'Modifier ' + esc(u.username) : 'Nouvel utilisateur'}</h3>${u ? '' : '<label>Identifiant</label><input name="username" required>'}<label>Nom</label><input name="name" required value="${esc(u?.name)}"><label>Profil</label><select name="role">${Object.entries(ROLE).map(([k, l]) => `<option value="${k}" ${u?.role === k ? 'selected' : ''}>${l}</option>`).join('')}</select>${u ? `<label>État</label><select name="active"><option value="1" ${u.active ? 'selected' : ''}>Actif</option><option value="0" ${u.active ? '' : 'selected'}>Désactivé</option></select>` : ''}<label>${u ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe (8 caractères minimum)'}</label><input type="password" name="password" ${u ? '' : 'required'} minlength="8" autocomplete="new-password">${closeBtns()}`, async fd => {
+    const b = { name: fd.get('name'), role: fd.get('role'), password: fd.get('password') || undefined };
+    if (u) await api('users/' + u.id, 'PUT', { ...b, active: fd.get('active') === '1' }); else await api('users', 'POST', { ...b, username: fd.get('username') });
+    admUsers = (await api('users')).users;
+  });
+}
+function acctForm() {
+  modal(`<h3 style="margin-top:0">Mon compte</h3><p>${esc(S.user.name)} · ${ROLE[S.user.role]}</p><label>Mot de passe actuel</label><input type="password" name="c" required autocomplete="current-password"><label>Nouveau mot de passe (8 caractères minimum)</label><input type="password" name="p" required minlength="8" autocomplete="new-password">${closeBtns('Changer')}`, async fd => {
+    const r = await api('password', 'POST', { current: fd.get('c'), password: fd.get('p') }); token = r.token; sessionStorage.setItem('fbtok', token);
+  });
+}
+function restoreFile() {
+  const i = document.createElement('input'); i.type = 'file'; i.accept = '.json'; i.onchange = async () => {
+    try { const d = JSON.parse(await i.files[0].text()); if (!confirm('Remplacer TOUTES les données actuelles par la sauvegarde du ' + d.ts + ' ? Un instantané de sécurité est pris avant.')) return; await api('restore', 'POST', d); alert('Restauration terminée. Reconnectez-vous.'); logout(); }
+    catch (e) { alert('Échec : ' + e.message); }
+  }; i.click();
+}
+
+/* ====== Événements ====== */
+function bind() {
+  const qi = $('#q'); if (qi) qi.oninput = () => { q = qi.value; const p = qi.selectionStart; shell(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); };
+  const on = (id, f) => { const e = $(id); if (e) e.onchange = () => { f(e.value); shell(); }; };
+  on('#ysel', v => Y = +v); on('#jy', v => jyear = +v); on('#mf2', v => memFilter = v); on('#cmonth', v => cotMonth = v || cotMonth);
+  on('#rt', v => rep.type = v); on('#rmo', v => rep.month = v); on('#ry', v => rep.year = +v); on('#rq', v => rep.quarter = +v); on('#rm', v => rep.member = v);
+  document.querySelectorAll('[data-cm]').forEach(b => b.onclick = () => { cotMode = b.dataset.cm; shell(); });
+  document.querySelectorAll('[data-jm]').forEach(b => b.onclick = () => { jmode = b.dataset.jm; auditRows = null; shell(); });
+  document.querySelectorAll('[data-a]').forEach(b => b.onclick = async e => {
+    e.preventDefault(); const a = b.dataset.a, id = +b.dataset.id;
+    try {
+      if (a === 'logout') { try { await api('status'); } catch {} logout(); }
+      else if (a === 'acct') acctForm(); else if (a === 'addm') memberForm(); else if (a === 'editm') memberForm(memberById(id)); else if (a === 'mdet') memberDetail(memberById(id));
+      else if (a === 'pay') { $('#dlg').open && $('#dlg').close(); payForm(id || undefined, b.dataset.mo); }
+      else if (a === 'addtx') txForm(b.dataset.k); else if (a === 'void') voidForm(S.ops.find(o => o.id === id)); else if (a === 'more') { jmax += 300; shell(); }
+      else if (a === 'yopen') { Y = +b.dataset.y; view = 'dash'; shell(); window.scrollTo(0, 0); }
+      else if (a === 'yrep') { rep.type = 'annuel'; rep.year = +b.dataset.y; view = 'rep'; shell(); window.scrollTo(0, 0); }
+      else if (a === 'mrep') { $('#dlg').close(); rep.type = 'individuel'; rep.member = id; view = 'rep'; shell(); }
+      else if (a === 'xlsx') await exportXlsx(curReport);
+      else if (a === 'addu') userForm(); else if (a === 'editu') userForm(admUsers.find(u => u.id === id));
+      else if (a === 'backup') download('sauvegarde-famille-best-' + S.today + '.json', JSON.stringify(await api('backup')), 'application/json');
+      else if (a === 'snap') { await api('snapshot', 'POST', {}); alert('Instantané interne créé.'); }
+      else if (a === 'restore') restoreFile();
+    } catch (x) { alert(x.message); }
+  });
+}
+
+if (token) boot().catch(() => logout()); else showAuth();
+</script>
+</body>
+</html>
